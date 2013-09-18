@@ -2,6 +2,15 @@ package ndfs.mcndfs_1_naive;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import graph.State;
 import graph.Graph;
@@ -13,19 +22,15 @@ import ndfs.NoCycleFound;
 public class NNDFS implements NDFS {
 
 
-    private Graph graph;
-    private Colors colors;
-    private Map<State, Integer> counts;
+    volatile private Graph graph;
+    volatile private Colors colors;
+    volatile private Map<State, Integer> counts;
+    volatile boolean busy = false;
     
-    int threadsBusy;
-    boolean foundCycle;
-    Result result;
 
-
-    class Bird implements Runnable {
+    class Bird implements Callable<Integer> {
 
     	int id;
-    	private Thread th;
     	private State initialState;
     	private Colors localColors;
         private Map<State, Boolean> localPinks;
@@ -34,38 +39,29 @@ public class NNDFS implements NDFS {
     	Bird(State s, int i) {
     		this.id = i;
     		this.initialState = s;
-    		this.localPinks = new BooleanHashTable<State, Boolean>(new Boolean(false));
+    		this.localPinks = new BooleanHashMap<State>(new Boolean(false));
 
             Map<State, ndfs.mcndfs_1_naive.Color> map = new HashMap<State, ndfs.mcndfs_1_naive.Color>();
             this.localColors = new Colors(map);
-    		
-            this.th = new Thread(this, "Bird thread");
-            this.th.start();
     	}
     	
 
-    	@Override
-    	public void run() {
+    	public Integer call() throws Exception {
 			try {
 				dfsBlue(initialState);
 			} catch (Result e) {
-				//
-			} finally {
-				decreaseCounter();
+				throw new Exception(e);
 			}
+
+			return id;
     	}
 
 
         private void dfsRed(State s) throws Result {
-    		System.out.println("red " + id);
         	localPinks.put(s, new Boolean(true));
             for (State t : graph.post(s)) {
                 if (localColors.hasColor(t, Color.CYAN)) {
-                	if (!foundCycle) {
-                		foundCycle = true;
-                    	reportResult(new CycleFound(id));
-                	}
-                    throw new CycleFound(id);
+                	throw new CycleFound();
                 }
                 if (! localPinks.get(t).booleanValue() && ! colors.hasColor(t, Color.RED)) {
                     dfsRed(t);
@@ -73,31 +69,27 @@ public class NNDFS implements NDFS {
             }
 
             if (s.isAccepting()) {
-            	// todo: convert to custom hashmap
-            	Integer c = counts.get(s);
-            	int v = 0;
-            	if (c != null) {
-            		v = Math.max(0, c.intValue());
+            	synchronized(counts) { 
+	            	int currentVal = counts.get(s).intValue();
+	            	counts.put(s, new Integer(currentVal - 1));
             	}
-            	counts.put(s, new Integer(v));
-            	while (counts.get(s).intValue() > 0) {
+            	while (counts.get(s).intValue() > 0 && busy) {
             		try {
 						Thread.sleep(5);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+//						e.printStackTrace();
 					}
-            		System.out.println(counts.get(s).intValue());
             	}
             }
 
-            colors.color(s, Color.RED);
+            synchronized (colors) {
+            	colors.color(s, Color.RED);
+            }
         	localPinks.put(s, new Boolean(false));
-            
         }
 
 
         private void dfsBlue(State s) throws Result {
-    		System.out.println("blue " + id);
             localColors.color(s, Color.CYAN);
             
             for (State t : graph.post(s)) {
@@ -107,12 +99,11 @@ public class NNDFS implements NDFS {
             }
             
             if (s.isAccepting()) {
-            	Integer c = counts.get(s);
-            	if (c != null) {
-            		counts.put(s, new Integer(c.intValue() + 1));
-            	} else {
-            		counts.put(s, new Integer(1));
+            	synchronized (counts) {
+	            	Integer c = counts.get(s);
+	           		counts.put(s, new Integer(c.intValue() + 1));
             	}
+            	
                 dfsRed(s);
             }
             
@@ -120,20 +111,12 @@ public class NNDFS implements NDFS {
         }
     	
     }
-    
-    public void reportResult(Result e) {
-    	result = e;
-    }
-    
-    public void decreaseCounter() {
-    	threadsBusy--;
-    }  
 
 
     public NNDFS(Graph graph, Map<State, Color> colorStore) {
         this.graph = graph;
         this.colors = new Colors(colorStore);
-        this.counts = new HashMap<State, Integer>();
+        this.counts = new IntegerHashMap<State>(new Integer(0));
     }
 
 
@@ -141,28 +124,35 @@ public class NNDFS implements NDFS {
 
 
     private void nndfs(State s, int nrOfThreads) throws Result {
-    	threadsBusy = 0;
-    	foundCycle = false;
+    	ExecutorService ex = Executors.newFixedThreadPool(nrOfThreads);
+    	CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
     	
-    	result = new NoCycleFound();
+    	boolean foundCycle = false;
+    	busy = true;
     	
     	for (int i = 0; i < nrOfThreads; i++) {
-    		threadsBusy++;
-    		new Bird(s, i);
-    		
+    		cs.submit(new Bird(s, i));
     	}
-    	while (threadsBusy != 0) {
-    		if (foundCycle) {
-    			throw result;
-    		}
-	    	try {
-				Thread.sleep(5);
+    	
+    	for (int i = 0; i < nrOfThreads; i++) {
+			try {
+				cs.take().get();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+			} catch (ExecutionException e) {
+				foundCycle = true;
+				busy = false;
+				break;
 			}
     	}
     	
-        throw result;
+    	ex.shutdownNow();
+		
+        if (foundCycle) {
+        	throw new CycleFound();
+        } else {
+        	throw new NoCycleFound();
+        }
     }
 
 
