@@ -1,6 +1,9 @@
 package ndfs.mcndfs_1_naive;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -25,7 +28,8 @@ public class NNDFS implements NDFS {
     volatile private Graph graph;
     volatile private Colors colors;
     volatile private Map<State, Integer> counts;
-    volatile boolean busy = false;
+    
+    private int nrOfThreads = 1;
     
 
     class Bird implements Callable<Integer> {
@@ -59,21 +63,34 @@ public class NNDFS implements NDFS {
 
         private void dfsRed(State s) throws Result {
         	localPinks.put(s, new Boolean(true));
-            for (State t : graph.post(s)) {
+
+            boolean tRed;
+            List<State> post;
+            
+        	synchronized (graph) {
+        		post = graph.post(s);
+        	}
+    		Collections.shuffle(post);
+    		
+            for (State t : post) {
                 if (localColors.hasColor(t, Color.CYAN)) {
                 	throw new CycleFound();
                 }
-                if (! localPinks.get(t).booleanValue() && ! colors.hasColor(t, Color.RED)) {
+
+            	synchronized (colors) {
+            		tRed = colors.hasColor(t, Color.RED);
+            	}
+                if (! localPinks.get(t).booleanValue() && ! tRed) {
                     dfsRed(t);
                 }
             }
 
             if (s.isAccepting()) {
-            	synchronized(counts) { 
+            	synchronized(counts) {
 	            	int currentVal = counts.get(s).intValue();
 	            	counts.put(s, new Integer(currentVal - 1));
             	}
-            	while (counts.get(s).intValue() > 0 && busy) {
+            	while (counts.get(s).intValue() > 0) {
             		try {
 						Thread.sleep(5);
 					} catch (InterruptedException e) {
@@ -92,8 +109,19 @@ public class NNDFS implements NDFS {
         private void dfsBlue(State s) throws Result {
             localColors.color(s, Color.CYAN);
             
-            for (State t : graph.post(s)) {
-                if (localColors.hasColor(t, Color.WHITE) && ! colors.hasColor(t, Color.RED)) {
+            boolean tRed;
+            List<State> post;
+            
+        	synchronized (graph) {
+        		post = graph.post(s);
+        	}
+    		Collections.shuffle(post);
+    		
+            for (State t : post) {
+            	synchronized (colors) {
+            		tRed = colors.hasColor(t, Color.RED);
+            	}
+                if (localColors.hasColor(t, Color.WHITE) && ! tRed) {
                     dfsBlue(t);
                 }
             }
@@ -101,7 +129,7 @@ public class NNDFS implements NDFS {
             if (s.isAccepting()) {
             	synchronized (counts) {
 	            	Integer c = counts.get(s);
-	           		counts.put(s, new Integer(c.intValue() + 1));
+	           		counts.put(s, c.intValue() + 1);
             	}
             	
                 dfsRed(s);
@@ -109,7 +137,7 @@ public class NNDFS implements NDFS {
             
             localColors.color(s, Color.BLUE);
         }
-    	
+        
     }
 
 
@@ -120,28 +148,27 @@ public class NNDFS implements NDFS {
     }
 
 
-    public void init() {}
+    public void init(int nrOfThreads) {
+    	this.nrOfThreads = nrOfThreads;
+    }
 
-
-    private void nndfs(State s, int nrOfThreads) throws Result {
-    	ExecutorService ex = Executors.newFixedThreadPool(nrOfThreads);
+    private void nndfs(State s) throws Result {
+    	ExecutorService ex = Executors.newFixedThreadPool(this.nrOfThreads);
     	CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
     	
     	boolean foundCycle = false;
-    	busy = true;
     	
-    	for (int i = 0; i < nrOfThreads; i++) {
+    	for (int i = 0; i < this.nrOfThreads; i++) {
     		cs.submit(new Bird(s, i));
     	}
     	
-    	for (int i = 0; i < nrOfThreads; i++) {
+    	for (int i = 0; i < this.nrOfThreads; i++) {
 			try {
 				cs.take().get();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (ExecutionException e) {
 				foundCycle = true;
-				busy = false;
 				break;
 			}
     	}
@@ -157,7 +184,7 @@ public class NNDFS implements NDFS {
 
 
     public void ndfs() throws Result {
-        nndfs(graph.getInitialState(), 10);
+        nndfs(graph.getInitialState());
     }
 
 }

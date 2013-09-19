@@ -30,7 +30,9 @@ public class NNDFS implements NDFS {
 
 
 
-    public void init() {}
+    public void init(int nrOfTreads) {
+    	// do nothing
+    }
 
 
 
