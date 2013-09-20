@@ -62,8 +62,8 @@ public class Main {
     private static void runNDFS2(String version, Map<State, ndfs.mcndfs_1_naive.Color> colorStore,
     		File file, int nrOfThreads) throws FileNotFoundException {
 
-        Graph graph = GraphFactory.createGraph(file);
-        NDFS ndfs = NDFSFactory.createMCNDFSNaive(graph, colorStore);
+//        Graph graph = GraphFactory.createGraph(file);
+        NDFS ndfs = NDFSFactory.createMCNDFSNaive(file, colorStore);
         long start = System.currentTimeMillis();
         long end;
         try {

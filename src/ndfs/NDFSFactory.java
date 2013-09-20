@@ -2,6 +2,7 @@ package ndfs;
 
 
 
+import java.io.File;
 import java.util.Map;
 
 import graph.Graph;
@@ -19,8 +20,8 @@ public class NDFSFactory {
     }
 
 
-    public static NDFS createMCNDFSNaive(Graph graph, Map<State,
+    public static NDFS createMCNDFSNaive(File file, Map<State,
             ndfs.mcndfs_1_naive.Color> colorStore) {
-        return new ndfs.mcndfs_1_naive.NNDFS(graph, colorStore);
+        return new ndfs.mcndfs_1_naive.NNDFS(file, colorStore);
     }
 }
