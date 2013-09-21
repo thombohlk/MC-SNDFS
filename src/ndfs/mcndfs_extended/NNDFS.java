@@ -124,6 +124,11 @@ public class NNDFS implements NDFS {
             Collections.shuffle(post);
 
             for (State t : post) {
+            	// early cycle detection
+            	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
+            		throw new CycleFound();
+            	}
+            	
                 synchronized (stateRed) {
                     tRed = stateRed.get(t);
                 }
