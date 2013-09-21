@@ -4,16 +4,13 @@ package driver;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-
 import java.util.Map;
 import java.util.HashMap;
 
 import graph.GraphFactory;
 import graph.Graph;
 import graph.State;
-
-import ndfs.nndfs.Color;
-
+import helperClasses.Color;
 import ndfs.NDFS;
 import ndfs.NDFSFactory;
 import ndfs.Result;
@@ -59,15 +56,14 @@ public class Main {
     }
 
 
-    private static void runNDFS2(String version, Map<State, ndfs.mcndfs_1_naive.Color> colorStore,
-    		File file, int nrOfThreads) throws FileNotFoundException {
+    private static void runMCNDFS(String version, File file,
+    		int nrOfThreads) throws FileNotFoundException, InstantiationException {
 
-//        Graph graph = GraphFactory.createGraph(file);
-        NDFS ndfs = NDFSFactory.createMCNDFSNaive(file, colorStore);
+        NDFS ndfs = NDFSFactory.createMCNDFS(version, file);
+    	ndfs.init(nrOfThreads);
         long start = System.currentTimeMillis();
         long end;
         try {
-        	ndfs.init(nrOfThreads);
             ndfs.ndfs();
             throw new Error("No result returned by " + version);
         }
@@ -80,7 +76,7 @@ public class Main {
 
 
     private static void dispatch(File file, String version, int nrOfThreads)
-            throws ArgumentException, FileNotFoundException {
+            throws ArgumentException, FileNotFoundException, InstantiationException {
         if (version.equals("seq")) {
             if (nrOfThreads != 1) {
                 throw new ArgumentException("seq can only run with 1 worker");
@@ -88,9 +84,8 @@ public class Main {
             Map<State, Color> map = new HashMap<State, Color>();
             runNDFS("seq", map, file);
         }
-        else if (version.equals("naive_mc")) {
-            Map<State, ndfs.mcndfs_1_naive.Color> colorStore = new HashMap<State, ndfs.mcndfs_1_naive.Color>();
-            runNDFS2("naive_mc", colorStore, file, nrOfThreads);
+        else if (version.equals("naive")) {
+            runMCNDFS(version, file, nrOfThreads);
         }
         else {
             throw new ArgumentException("Unkown version: " + version);
@@ -118,6 +113,9 @@ public class Main {
         catch (NumberFormatException e) {
             System.err.println(e.getMessage());
             printUsage();
-        }
+        } catch (InstantiationException e) {
+            System.err.println(e.getMessage());
+            printUsage();
+		}
     }
 }

@@ -6,7 +6,8 @@ import java.util.Map;
 
 import graph.State;
 import graph.Graph;
-
+import helperClasses.Color;
+import helperClasses.Colors;
 import ndfs.NDFS;
 import ndfs.Result;
 import ndfs.CycleFound;

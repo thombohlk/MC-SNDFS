@@ -9,7 +9,6 @@ import graph.State;
 public interface NDFS {
 
 
-
     public void ndfs() throws Result;
 
 

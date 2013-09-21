@@ -1,4 +1,4 @@
-package ndfs.mcndfs_1_naive;
+package helperClasses;
 
 
 
@@ -8,16 +8,20 @@ import graph.State;
 
 
 
-class Colors {
+public class Colors {
+
+
 
     private Map<State, Color> map;
+    
 
-    Colors(Map<State, Color> map) {
+
+    public Colors(Map<State, Color> map) {
         this.map = map;
     }
 
 
-    boolean hasColor(State state, Color color) {
+    public boolean hasColor(State state, Color color) {
         if (color == Color.WHITE) {
             return map.get(state) == null;
         }
@@ -27,7 +31,7 @@ class Colors {
     }
 
 
-    void color(State state, Color color) {
+    public void color(State state, Color color) {
         map.put(state, color);
     }
 }
