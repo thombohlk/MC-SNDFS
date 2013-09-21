@@ -84,7 +84,7 @@ public class Main {
             Map<State, Color> map = new HashMap<State, Color>();
             runNDFS("seq", map, file);
         }
-        else if (version.equals("naive")) {
+        else if (version.matches("naive|extended")) {
             runMCNDFS(version, file, nrOfThreads);
         }
         else {

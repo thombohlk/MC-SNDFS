@@ -115,6 +115,7 @@ public class NNDFS implements NDFS {
 
         private void dfsBlue(State s) throws Result, InterruptedException {
             boolean tRed;
+            boolean allRed = true;
             List<State> post;
 
             localColors.color(s, Color.CYAN);
@@ -129,9 +130,20 @@ public class NNDFS implements NDFS {
                 if (localColors.hasColor(t, Color.WHITE) && ! tRed) {
                     dfsBlue(t);
                 }
+                
+                // allred
+                synchronized (stateRed) {
+                    if (! stateRed.get(t)) {
+                    	allRed = false;
+                    }
+                }
             }
 
-            if (s.isAccepting()) {
+            if (allRed) {
+                synchronized (stateRed) {
+                    stateRed.put(s, true);
+                }
+            } else if (s.isAccepting()) {
                 synchronized (stateCount) {
                     int count = stateCount.get(s);
                     stateCount.put(s, count + 1);
