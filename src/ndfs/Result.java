@@ -13,4 +13,8 @@ public class Result extends Throwable {
     public Result(String message) {
         super(message);
     }
+    
+    public boolean compare(Result r) {
+		return this.getMessage().equals(r.getMessage());
+    }
 }
