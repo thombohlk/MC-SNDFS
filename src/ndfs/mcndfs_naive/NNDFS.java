@@ -63,7 +63,7 @@ public class NNDFS implements NDFS {
             try {
                 dfsBlue(initialState);
             } catch (Result e) {
-                throw new Exception(e);
+                return -(this.id);
             }
 
             return this.id;
@@ -155,17 +155,18 @@ public class NNDFS implements NDFS {
 
     public void init(int nrOfThreads) {
     	this.swarm = new ArrayList<Bird>();
-    	for (int i = 0; i < nrOfThreads; i++) {
+    	for (int i = 1; i <= nrOfThreads; i++) {
     		this.swarm.add(new Bird(i));
     	}
     }
 
     private void nndfs() throws Result {
+        boolean foundCycle = false;
+        int foundBy = 0;
+        
         ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
 
-        boolean foundCycle = false;
-        
         // setup threads for each of the callables 
         for (int i = 0; i < this.swarm.size(); i++) {
             cs.submit(swarm.get(i));
@@ -173,20 +174,22 @@ public class NNDFS implements NDFS {
 
         // Wait for the first thread to return. If an exception is thrown the 
         // completion service is shut down and a CycleFound will be thrown.
-        for (int i = 0; i < this.swarm.size(); i++) {
-            try {
-                cs.take().get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                foundCycle = true;
-                break;
-            }
-        }
+        try {
+			int result = cs.take().get();
+			if (result > 0) {
+				foundBy = result;
+			} else {
+				foundBy = -result;
+				foundCycle = true;
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         ex.shutdownNow();
 
         if (foundCycle) {
-            throw new CycleFound();
+            throw new CycleFound(foundBy);
         } else {
             throw new NoCycleFound();
         }
