@@ -14,7 +14,12 @@ public class Result extends Throwable {
         super(message);
     }
     
-    public boolean compare(Result r) {
-		return this.getMessage().equals(r.getMessage());
+    public boolean isEqualTo(Result r) {
+    	Class<?> a = this.getClass();
+    	Class<?> b = r.getClass();
+    	if (a == null || b == null) {
+    		return true;
+    	}
+		return a.getName().equals(b.getName());
     }
 }

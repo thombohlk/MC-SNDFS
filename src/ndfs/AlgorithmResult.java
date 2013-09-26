@@ -1,13 +1,13 @@
 package ndfs;
 
-public class AlgorithmResult extends Result {
+public class AlgorithmResult extends Result implements Comparable {
 
 	private long duration;
 	private Result result;
 	private String version;
 	
-	public AlgorithmResult(String message, long duration, Result result, String version) {
-		super(message);
+	public AlgorithmResult(Result result, long duration, String version) {
+		super(result.getMessage());
 		
 		this.duration = duration;
 		this.result = result;
@@ -24,6 +24,12 @@ public class AlgorithmResult extends Result {
 	
 	public String getVersion() {
 		return this.version;
+	}
+
+	@Override
+	public int compareTo(Object o) {
+		// TODO Auto-generated method stub
+		return (int) (this.duration - ((AlgorithmResult) o).duration);
 	}
 
 }

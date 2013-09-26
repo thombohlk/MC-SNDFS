@@ -54,7 +54,7 @@ public class Main {
         }
         catch (Result r) {
             end = System.currentTimeMillis();
-            throw new AlgorithmResult(r.getMessage(), end - start, r, version);
+            throw new AlgorithmResult(r, end - start, version);
         }
     }
 
@@ -72,7 +72,7 @@ public class Main {
         }
         catch (Result r) {
             end = System.currentTimeMillis();            
-            throw new AlgorithmResult(r.getMessage(), end - start, r, version);
+            throw new AlgorithmResult(r, end - start, version);
         }
     }
 
@@ -120,9 +120,6 @@ public class Main {
      * @throws InstantiationException 
      */
     private static void runComparisonOnFile(File file, int nrOfThreads, int nrOfIterations) throws FileNotFoundException, InstantiationException {
-        long fastest = Long.MAX_VALUE;
-        String fastestS = "";
-
         AlgorithmResult[][] results = new AlgorithmResult[versions.length + 1][nrOfIterations];
 
         for (int i = 0; i < nrOfIterations; i++) {
@@ -142,30 +139,32 @@ public class Main {
 					runMCNDFS(version, file, nrOfThreads);
 				} catch (AlgorithmResult result) {
 					results[j][i] = result;
-		    		System.out.print(result.getDuration() + " ms\n");
+		    		System.out.print("\t" + result.getDuration() + " ms\t" + result.getMessage() + "\n");
 				}
 	        }
     		System.out.println("");
         }
 
+        ArrayList<AlgorithmResult> averages = new ArrayList<AlgorithmResult>();
         for (int i = 0; i < results.length; i++) {
         	Long total = (long) 0;
 	        for (int j = 0; j < results[0].length; j++) {
 	        	total = total + results[i][j].getDuration();
 	        }
 	        Long average = total/results[0].length;
-	        if (average < fastest) {
-	        	fastest = average;
-	        	fastestS = (i == 0 ? "seq" : versions[i-1]);
-	        }
+	        AlgorithmResult ar = new AlgorithmResult(new Result("dummy"), average, (i == 0 ? "seq" : versions[i-1]));
+	        averages.add(ar);
+        }
+        
+        Collections.sort(averages);
+        for (int i = 0; i < averages.size(); i++) {
+        	AlgorithmResult result = averages.get(i);
+    		System.out.println((i+1) + ": " + result.getVersion() + " at " + result.getDuration() + "ms.");
         }
 
-		System.out.println("");
-		System.out.println(fastestS + " was the fastest algorithm with an average of " + fastest + " ms.");
-		
 		for (int i = 0; i < results.length; i++) {
 			for (int j = 0; j < results[0].length; j++) {
-		    	if (! results[i][j].compare(results[i][0]) ) {
+		    	if (! results[i][j].getResult().isEqualTo(results[i][0].getResult()) ) {
 		    		System.out.println("Not all outputs are the same for " + (i == 0 ? "seq" : versions[i-1]) + ".");
 		        	return;
 		    	}
