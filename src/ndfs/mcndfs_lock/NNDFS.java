@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import graph.GraphFactory;
@@ -34,6 +35,7 @@ public class NNDFS implements NDFS {
     
     private final ReentrantLock redLock = new ReentrantLock();
     private final ReentrantLock countLock = new ReentrantLock();
+    private final Condition countZero = countLock.newCondition();
 
     private ArrayList<Bird> swarm;
     private File file;
@@ -89,8 +91,11 @@ public class NNDFS implements NDFS {
                 }
 
                 redLock.lock();
-                tRed = stateRed.get(t);
-                redLock.unlock();
+                try {
+                	tRed = stateRed.get(t);
+                } finally {
+                	redLock.unlock();
+                }
                 
                 if (! localStatePink.get(t).booleanValue() && ! tRed) {
                     dfsRed(t);
@@ -98,22 +103,40 @@ public class NNDFS implements NDFS {
             }
 
             if (s.isAccepting()) {
+//                countLock.lock();
+//                try {
+//	                int count = stateCount.get(s).intValue();
+//	                stateCount.put(s, count - 1);
+//
+//	                while (stateCount.get(s).intValue() > 0) {
+//	                	countZero.await();
+//	                }
+//	                countZero.signalAll();
+//                } finally {
+//                	countLock.unlock();
+//                }
                 countLock.lock();
-                int count = stateCount.get(s).intValue();
-                stateCount.put(s, count - 1);
-                countLock.unlock();
+                try {
+	                int count = stateCount.get(s).intValue();
+	                stateCount.put(s, count - 1);
+                } finally {
+                	countLock.unlock();
+                }
 
                 synchronized(stateCount) {
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
-	                stateCount.notify();
+	                stateCount.notifyAll();
                 }
             }
 
             redLock.lock();
-            stateRed.put(s, true);
-            redLock.unlock();
+            try {
+            	stateRed.put(s, true);
+            } finally {
+            	redLock.unlock();
+            }
             
             localStatePink.put(s, false);
         }
@@ -136,8 +159,11 @@ public class NNDFS implements NDFS {
             	}
 
                 redLock.lock();
-                tRed = stateRed.get(t);
-                redLock.unlock();
+                try {
+                	tRed = stateRed.get(t);
+                } finally {
+                	redLock.unlock();
+                }
                 
                 if (localColors.hasColor(t, Color.WHITE) && ! tRed) {
                     dfsBlue(t);
@@ -153,13 +179,19 @@ public class NNDFS implements NDFS {
 
             if (allRed) {
                 redLock.lock();
+                try {
                     stateRed.put(s, true);
-                redLock.unlock();
+                } finally {
+                	redLock.unlock();
+                }
             } else if (s.isAccepting()) {
             	countLock.lock();
-                int count = stateCount.get(s);
-                stateCount.put(s, count + 1);
-                countLock.unlock();
+            	try {
+	                int count = stateCount.get(s);
+	                stateCount.put(s, count + 1);
+            	} finally {
+            		countLock.unlock();
+            	}
 
                 dfsRed(s);
             }

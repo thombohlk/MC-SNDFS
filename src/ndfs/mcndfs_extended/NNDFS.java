@@ -58,7 +58,11 @@ public class NNDFS implements NDFS {
             this.localColors = new Colors(new HashMap<State, Color>());
         }
 
-
+        /**
+         * Start algorithm.
+         * 
+         * @return Integer Returns -id if cycle has been found, otherwise id.
+         */
         public Integer call() throws Exception {
             try {
                 dfsBlue(initialState);
@@ -126,7 +130,7 @@ public class NNDFS implements NDFS {
             for (State t : post) {
             	// early cycle detection
             	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
-            		throw new CycleFound();
+            		throw new CycleFound(id);
             	}
             	
                 synchronized (stateRed) {

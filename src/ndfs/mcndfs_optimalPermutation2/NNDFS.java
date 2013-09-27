@@ -165,8 +165,6 @@ public class NNDFS implements NDFS {
 			// Determine amount of post states to permute
 			int nrOfSuccessors = postStates.size();
 			
-			System.out.println("NOS: " + nrOfSuccessors);
-			
 			// Permute for amount of post states > 1
 			if (nrOfSuccessors > 1) {
 				// Create array to store rotations for the different sub-parts
@@ -175,16 +173,13 @@ public class NNDFS implements NDFS {
 				int[] rotates = new int[(nrOfSuccessors-1)];
 				
 				// initialize local permutation id variable
-				int permNumber;
+				int permNumber = id;
 				
 				// Acquire permutation id and increase by one (synchronized)
-				synchronized (permutationNr) {
-					permNumber = permutationNr.get(s);
-					permutationNr.put(s, permNumber + 1);
-				}
-				
-				System.out.println("PermN: " + permNumber);
-				System.out.println("error?: " + (nrOfSuccessors-1));
+//				synchronized (permutationNr) {
+//					permNumber = permutationNr.get(s);
+//					permutationNr.put(s, permNumber + 1);
+//				}
 				
 				// Calculate initial rotation (ergo on all elements)
 				// (to determine which state to visit first)
@@ -192,14 +187,13 @@ public class NNDFS implements NDFS {
 				
 				// Determine remaining rotations (if any)
 				for (int i=(nrOfSuccessors-3); i>=0; i--) {
-					rotates[i] = permNumber/(nrOfSuccessors) % i+2;
+					rotates[i] = (permNumber/nrOfSuccessors) % i+2;
 				}
 				
 				// Execute rotations
 				for (int i=1; i<=rotates.length; i++) {
-					Collections.rotate(postStates.subList(i-1,rotates.length), -1*rotates[rotates.length-i]);
+					Collections.rotate(postStates.subList(i-1,rotates.length+1), -1*rotates[rotates.length-i]);
 				}
-				
 				// return post states in permuted order
 				return postStates;
 			} else {
