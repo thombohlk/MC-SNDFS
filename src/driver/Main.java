@@ -23,7 +23,7 @@ import ndfs.Result;
 
 public class Main {
 
-	private static String[] versions = { "naive", "extended", "optimalPermutation", "lock" };
+	private static String[] versions = { "naive", "extended", "optimalPermutation", "optimalPermutation2", "lock" };
 
     private static class ArgumentException extends Exception {
         private static final long serialVersionUID = 1L;
@@ -90,7 +90,7 @@ public class Main {
 		            Map<State, Color> map = new HashMap<State, Color>();
 						runNDFS("seq", map, file);
 		        }
-		        else if (version.matches("naive|extended|optimalPermutation|lock")) {
+		        else if (version.matches("naive|extended|optimalPermutation|optimalPermutation2|lock")) {
 					runMCNDFS(version, file, nrOfThreads);
 		        }
 		        else {
