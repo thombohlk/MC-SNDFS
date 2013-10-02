@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +22,7 @@ import helperClasses.BooleanHashMap;
 import helperClasses.Color;
 import helperClasses.Colors;
 import helperClasses.IntegerHashMap;
+import helperClasses.RandomSeed;
 import ndfs.NDFS;
 import ndfs.Result;
 import ndfs.CycleFound;
@@ -42,6 +44,7 @@ public class NNDFS implements NDFS {
         private State initialState;
         private Colors localColors;
         private Map<State, Boolean> localStatePink;
+        private Random rand;
 
 
         Bird(int id) {
@@ -56,6 +59,7 @@ public class NNDFS implements NDFS {
             this.initialState = graph.getInitialState();
             this.localStatePink = new BooleanHashMap<State>(new Boolean(false));
             this.localColors = new Colors(new HashMap<State, Color>());
+            this.rand = new Random(RandomSeed.SEED);
         }
 
 
@@ -77,7 +81,7 @@ public class NNDFS implements NDFS {
             localStatePink.put(s, true);
 
             post = graph.post(s);
-            Collections.shuffle(post);
+            Collections.shuffle(post, this.rand);
 
             for (State t : post) {
                 if (localColors.hasColor(t, Color.CYAN)) {
@@ -102,7 +106,7 @@ public class NNDFS implements NDFS {
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
-	                stateCount.notify();
+	                stateCount.notifyAll();
                 }
             }
 
@@ -120,7 +124,7 @@ public class NNDFS implements NDFS {
             localColors.color(s, Color.CYAN);
 
             post = graph.post(s);
-            Collections.shuffle(post);
+            Collections.shuffle(post, this.rand);
 
             for (State t : post) {
                 synchronized (stateRed) {

@@ -1,4 +1,4 @@
-package ndfs.mcndfs_optimalPermutation3;
+package ndfs.mcndfs_log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,12 +7,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 import graph.GraphFactory;
 import graph.State;
@@ -21,20 +25,31 @@ import helperClasses.BooleanHashMap;
 import helperClasses.Colors;
 import helperClasses.Color;
 import helperClasses.IntegerHashMap;
+import helperClasses.RandomSeed;
 import ndfs.NDFS;
 import ndfs.Result;
 import ndfs.CycleFound;
 import ndfs.NoCycleFound;
+import ndfs.mcndfs_nosync.ConcurrentIntegerHashMap;
 
 public class NNDFS implements NDFS {
 
     volatile private BooleanHashMap<State> stateRed;
     volatile private Map<State, Integer> stateCount;
-    volatile private Map<State, Integer> permutationNr;
+
+    volatile private ConcurrentLongHashMap<Long> dfsBlueCount;
+    volatile private ConcurrentLongHashMap<Long> dfsRedCount;
+    volatile private ConcurrentLongHashMap<Long> waitCount;
+
+    volatile private AtomicLong dfsBlueCounter;
+    volatile private AtomicLong dfsRedCounter;
+    volatile private AtomicLong waitCounter;
 
     private ArrayList<Bird> swarm;
     private File file;
-    
+    private Long start, end;
+
+
     class Bird implements Callable<Integer> {
 
         int id;
@@ -42,6 +57,7 @@ public class NNDFS implements NDFS {
         private State initialState;
         private Colors localColors;
         private Map<State, Boolean> localStatePink;
+        private Random rand;
 
 
         Bird(int id) {
@@ -56,9 +72,14 @@ public class NNDFS implements NDFS {
             this.initialState = graph.getInitialState();
             this.localStatePink = new BooleanHashMap<State>(new Boolean(false));
             this.localColors = new Colors(new HashMap<State, Color>());
+            this.rand = new Random(RandomSeed.SEED);
         }
 
-
+        /**
+         * Start algorithm.
+         * 
+         * @return Integer Returns -id if cycle has been found, otherwise id.
+         */
         public Integer call() throws Exception {
             try {
                 dfsBlue(initialState);
@@ -71,12 +92,15 @@ public class NNDFS implements NDFS {
 
 
         private void dfsRed(State s) throws Result, InterruptedException {
+        	dfsRedCounter.incrementAndGet();
+        	
             boolean tRed;
             List<State> post;
 
             localStatePink.put(s, true);
 
-            post = getPermutation(s);
+            post = graph.post(s);
+            Collections.shuffle(post, rand);
 
             for (State t : post) {
                 if (localColors.hasColor(t, Color.CYAN)) {
@@ -98,10 +122,12 @@ public class NNDFS implements NDFS {
                 }
 
                 synchronized(stateCount) {
+                	waitCounter.incrementAndGet();
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
 	                stateCount.notifyAll();
+	                waitCounter.decrementAndGet();
                 }
             }
 
@@ -109,22 +135,27 @@ public class NNDFS implements NDFS {
                 stateRed.put(s, true);
             }
             localStatePink.put(s, false);
+
+        	dfsRedCounter.decrementAndGet();
         }
 
 
         private void dfsBlue(State s) throws Result, InterruptedException {
+        	dfsBlueCounter.incrementAndGet();
+        	
             boolean tRed;
             boolean allRed = true;
             List<State> post;
 
             localColors.color(s, Color.CYAN);
 
-            post = getPermutation(s);
+            post = graph.post(s);
+            Collections.shuffle(post, rand);
 
             for (State t : post) {
             	// early cycle detection
             	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
-            		throw new CycleFound();
+            		throw new CycleFound(id);
             	}
             	
                 synchronized (stateRed) {
@@ -156,58 +187,24 @@ public class NNDFS implements NDFS {
             }
 
             localColors.color(s, Color.BLUE);
+            
+            dfsBlueCounter.decrementAndGet();
         }
-        
-        private List<State> getPermutation(State s) {
-			// Get post states
-			List<State> postStates = graph.post(s);
-			
-			// Determine amount of post states to permute
-			int nrOfSuccessors = postStates.size();
-			
-			// Permute for amount of post states > 1
-			if (nrOfSuccessors > 1) {
-				// Create array to store rotations for the different sub-parts
-				// Amount of rotations always 1 smaller than number of elements
-				// (rotating 1 element is sort of pointless)
-				int[] rotates = new int[(nrOfSuccessors-1)];
-				
-				// initialize local permutation id variable
-				int permNumber;
-				
-				// Acquire permutation id and increase by one (synchronized)
-				synchronized (permutationNr) {
-					permNumber = permutationNr.get(s);
-					permutationNr.put(s, permNumber + 1);
-				}
-				
-				// Calculate initial rotation (ergo on all elements)
-				// (to determine which state to visit first)
-				rotates[(rotates.length-1)] = permNumber % nrOfSuccessors;
-				
-				// Determine remaining rotations (if any)
-				for (int i=(nrOfSuccessors-3); i>=0; i--) {
-					rotates[i] = (permNumber/nrOfSuccessors) % i+2;
-				}
-				
-				// Execute rotations
-				for (int i=1; i<=rotates.length; i++) {
-					Collections.rotate(postStates.subList(i-1,rotates.length+1), -1*rotates[rotates.length-i]);
-				}
-				// return post states in permuted order
-				return postStates;
-			} else {
-				return postStates;
-			}
-		}
 
     }
+
 
     public NNDFS(File file) {
         this.file = file;
         this.stateRed = new BooleanHashMap<State>(new Boolean(false));
         this.stateCount = new IntegerHashMap<State>(new Integer(0));
-        this.permutationNr = new IntegerHashMap<State>(new Integer(1));
+    	
+    	dfsBlueCount = new ConcurrentLongHashMap<Long>(-1);
+    	dfsRedCount = new ConcurrentLongHashMap<Long>(-1);
+    	waitCount = new ConcurrentLongHashMap<Long>(-1);
+    	dfsBlueCounter = new AtomicLong(0);
+    	dfsRedCounter = new AtomicLong(0);
+    	waitCounter = new AtomicLong(0);
     }
 
 
@@ -225,6 +222,18 @@ public class NNDFS implements NDFS {
         ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
         
+        start = System.currentTimeMillis();
+        
+         Timer t = new Timer();
+         t.schedule(new TimerTask() {
+        	public void run()  {
+        		long time = System.currentTimeMillis() - start;
+        		dfsBlueCount.put(time, dfsBlueCounter);
+        		dfsRedCount.put(time, dfsRedCounter);
+        		waitCount.put(time, waitCounter);
+        	}
+        	}, 1, 1);
+        
         // setup threads for each of the callables 
         for (int i = 0; i < this.swarm.size(); i++) {
             cs.submit(swarm.get(i));
@@ -241,10 +250,13 @@ public class NNDFS implements NDFS {
 				foundCycle = true;
 			}
 		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         ex.shutdownNow();
+        t.cancel();
+        
+        end = System.currentTimeMillis();
+        printLogs();
 
         if (foundCycle) {
             throw new CycleFound(foundBy);
@@ -254,7 +266,14 @@ public class NNDFS implements NDFS {
     }
 
 
-    public void ndfs() throws Result {
+    private void printLogs() {
+		for(long i = 0; i < end - start; i++) {
+			System.out.println(i + ", " + dfsBlueCount.get(i).get() + ", " + dfsRedCount.get(i).get() + ", " + waitCount.get(i).get());
+		}
+	}
+
+
+	public void ndfs() throws Result {
         nndfs();
     }
 

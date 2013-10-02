@@ -114,7 +114,7 @@ public class NNDFS implements NDFS {
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
-	                stateCount.notify();
+	                stateCount.notifyAll();
                 }
             }
 
