@@ -37,17 +37,10 @@ public class NNDFS implements NDFS {
     volatile private BooleanHashMap<State> stateRed;
     volatile private Map<State, Integer> stateCount;
 
-    volatile private ConcurrentLongHashMap<Long> dfsBlueCount;
-    volatile private ConcurrentLongHashMap<Long> dfsRedCount;
-    volatile private ConcurrentLongHashMap<Long> waitCount;
-
-    volatile private AtomicLong dfsBlueCounter;
-    volatile private AtomicLong dfsRedCounter;
-    volatile private AtomicLong waitCounter;
+    private Logger logger;
 
     private ArrayList<Bird> swarm;
     private File file;
-    private Long start, end;
 
 
     class Bird implements Callable<Integer> {
@@ -92,7 +85,7 @@ public class NNDFS implements NDFS {
 
 
         private void dfsRed(State s) throws Result, InterruptedException {
-        	dfsRedCounter.incrementAndGet();
+        	logger.logDfsRedStart(id, s);
         	
             boolean tRed;
             List<State> post;
@@ -122,12 +115,12 @@ public class NNDFS implements NDFS {
                 }
 
                 synchronized(stateCount) {
-                	waitCounter.incrementAndGet();
+                	logger.logIncrementWait();
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
 	                stateCount.notifyAll();
-	                waitCounter.decrementAndGet();
+	                logger.logDecrementWait();
                 }
             }
 
@@ -136,12 +129,12 @@ public class NNDFS implements NDFS {
             }
             localStatePink.put(s, false);
 
-        	dfsRedCounter.decrementAndGet();
+            logger.logDfsRedDone();
         }
 
 
         private void dfsBlue(State s) throws Result, InterruptedException {
-        	dfsBlueCounter.incrementAndGet();
+        	logger.logDfsBlueStart(id, s);
         	
             boolean tRed;
             boolean allRed = true;
@@ -162,7 +155,7 @@ public class NNDFS implements NDFS {
                     tRed = stateRed.get(t);
                 }
                 if (localColors.hasColor(t, Color.WHITE) && ! tRed) {
-                    dfsBlue(t);
+               			dfsBlue(t);
                 }
                 
                 // allred
@@ -187,8 +180,8 @@ public class NNDFS implements NDFS {
             }
 
             localColors.color(s, Color.BLUE);
-            
-            dfsBlueCounter.decrementAndGet();
+
+            logger.logDfsBlueDone();
         }
 
     }
@@ -198,13 +191,8 @@ public class NNDFS implements NDFS {
         this.file = file;
         this.stateRed = new BooleanHashMap<State>(new Boolean(false));
         this.stateCount = new IntegerHashMap<State>(new Integer(0));
-    	
-    	dfsBlueCount = new ConcurrentLongHashMap<Long>(-1);
-    	dfsRedCount = new ConcurrentLongHashMap<Long>(-1);
-    	waitCount = new ConcurrentLongHashMap<Long>(-1);
-    	dfsBlueCounter = new AtomicLong(0);
-    	dfsRedCounter = new AtomicLong(0);
-    	waitCounter = new AtomicLong(0);
+        
+        logger = new Logger(file);
     }
 
 
@@ -222,17 +210,7 @@ public class NNDFS implements NDFS {
         ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
         
-        start = System.currentTimeMillis();
-        
-         Timer t = new Timer();
-         t.schedule(new TimerTask() {
-        	public void run()  {
-        		long time = System.currentTimeMillis() - start;
-        		dfsBlueCount.put(time, dfsBlueCounter);
-        		dfsRedCount.put(time, dfsRedCounter);
-        		waitCount.put(time, waitCounter);
-        	}
-        	}, 1, 1);
+        logger.start();
         
         // setup threads for each of the callables 
         for (int i = 0; i < this.swarm.size(); i++) {
@@ -253,10 +231,8 @@ public class NNDFS implements NDFS {
 			e.printStackTrace();
 		}
         ex.shutdownNow();
-        t.cancel();
-        
-        end = System.currentTimeMillis();
-        printLogs();
+        logger.stop();
+        logger.printLogs();
 
         if (foundCycle) {
             throw new CycleFound(foundBy);
@@ -264,13 +240,6 @@ public class NNDFS implements NDFS {
             throw new NoCycleFound();
         }
     }
-
-
-    private void printLogs() {
-		for(long i = 0; i < end - start; i++) {
-			System.out.println(i + ", " + dfsBlueCount.get(i).get() + ", " + dfsRedCount.get(i).get() + ", " + waitCount.get(i).get());
-		}
-	}
 
 
 	public void ndfs() throws Result {

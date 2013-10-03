@@ -4,6 +4,6 @@ package helperClasses;
 
 public class RandomSeed {
 
-	public static final int SEED = 1;
+	public static final int SEED = 75;
 
 }
