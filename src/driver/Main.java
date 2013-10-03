@@ -15,6 +15,7 @@ import graph.GraphFactory;
 import graph.Graph;
 import graph.State;
 import helperClasses.Color;
+import mcndfs.MCNDFS;
 import ndfs.AlgorithmResult;
 import ndfs.NDFS;
 import ndfs.NDFSFactory;
@@ -56,6 +57,8 @@ public class Main {
         catch (Result r) {
             end = System.currentTimeMillis();
             throw new AlgorithmResult(r, end - start, version);
+        } finally {
+            ndfs.tearDown();
         }
     }
 
@@ -63,17 +66,20 @@ public class Main {
     private static void runMCNDFS(String version, File file,
     		int nrOfThreads) throws FileNotFoundException, InstantiationException, AlgorithmResult {
 
-        NDFS ndfs = NDFSFactory.createMCNDFS(version, file);
-    	ndfs.init(nrOfThreads);
+    	MCNDFS mcndfs = NDFSFactory.createMCNDFS(version, file);
+    	System.out.println("created swarm: " + !(mcndfs.swarm == null));
+    	mcndfs.init(nrOfThreads);
         long start = System.currentTimeMillis();
         long end;
         try {
-            ndfs.ndfs();
+            mcndfs.ndfs();
             throw new Error("No result returned by " + version);
         }
         catch (Result r) {
             end = System.currentTimeMillis();            
             throw new AlgorithmResult(r, end - start, version);
+        } finally {
+            mcndfs.tearDown();
         }
     }
 

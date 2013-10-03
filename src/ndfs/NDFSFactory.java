@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
+import mcndfs.MCNDFS;
 import graph.Graph;
 import graph.State;
 
@@ -22,12 +23,12 @@ public class NDFSFactory {
     }
 
 
-    public static NDFS createMCNDFS(String version, File file) throws InstantiationException {
+    public static MCNDFS createMCNDFS(String version, File file) throws InstantiationException {
         try {
         	  String name = "ndfs.mcndfs_" + version + ".NNDFS";
         	  Class<?> cl = Class.forName(name);
         	  Constructor<?> co = cl.getConstructor(new Class<?>[] { File.class });
-        	  return (NDFS) co.newInstance(new Object[] { file });
+        	  return (MCNDFS) co.newInstance(new Object[] { file });
 		} catch (InstantiationException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException

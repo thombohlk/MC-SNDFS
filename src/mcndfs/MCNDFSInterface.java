@@ -1,18 +1,13 @@
-package ndfs;
+package mcndfs;
 
+import ndfs.Result;
 
-
-import graph.State;
-
-
-
-public interface NDFS {
-
+public interface MCNDFSInterface {
 
     public void ndfs() throws Result;
 
     public void init(int nrOfThreads);
     
     public void tearDown();
-    
+	
 }

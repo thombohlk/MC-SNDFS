@@ -185,7 +185,7 @@ public class Logger {
 
 	private void printHeartBeats() {
     	long totalTime = end - start;
-		for(long i = 0; i < totalTime; i++) {
+		for (long i = 0; i < totalTime; i++) {
 			if (dfsBlueStartCount.get(i).get() == -1) {
 				continue;
 			}

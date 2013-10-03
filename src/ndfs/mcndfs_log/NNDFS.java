@@ -1,90 +1,30 @@
 package ndfs.mcndfs_log;
 
+import graph.State;
+import helperClasses.Color;
+
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicLong;
 
-import graph.GraphFactory;
-import graph.State;
-import graph.Graph;
-import helperClasses.BooleanHashMap;
-import helperClasses.Colors;
-import helperClasses.Color;
-import helperClasses.IntegerHashMap;
-import helperClasses.RandomSeed;
-import ndfs.NDFS;
-import ndfs.Result;
+import mcndfs.GeneralBird;
+import mcndfs.MCNDFS;
 import ndfs.CycleFound;
-import ndfs.NoCycleFound;
-import ndfs.mcndfs_nosync.ConcurrentIntegerHashMap;
+import ndfs.Result;
 
-public class NNDFS implements NDFS {
+public class NNDFS extends MCNDFS {
 
-    volatile private BooleanHashMap<State> stateRed;
-    volatile private Map<State, Integer> stateCount;
+    protected Logger logger;
+    protected ArrayList<Bird> swarm;
 
-    private Logger logger;
+    class Bird extends GeneralBird {
 
-    private ArrayList<Bird> swarm;
-    private File file;
+        Bird(int id, File file) {
+			super(id, file);
+		}
 
-
-    class Bird implements Callable<Integer> {
-
-        int id;
-        private Graph graph;
-        private State initialState;
-        private Colors localColors;
-        private Map<State, Boolean> localStatePink;
-        private Random rand;
-
-
-        Bird(int id) {
-            try {
-                this.graph = GraphFactory.createGraph(file);
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            this.id = id;
-            this.initialState = graph.getInitialState();
-            this.localStatePink = new BooleanHashMap<State>(new Boolean(false));
-            this.localColors = new Colors(new HashMap<State, Color>());
-            this.rand = new Random(RandomSeed.SEED);
-        }
-
-        /**
-         * Start algorithm.
-         * 
-         * @return Integer Returns -id if cycle has been found, otherwise id.
-         */
-        public Integer call() throws Exception {
-            try {
-                dfsBlue(initialState);
-            } catch (Result e) {
-                return -(this.id);
-            }
-
-            return this.id;
-        }
-
-
-        private void dfsRed(State s) throws Result, InterruptedException {
+		protected void dfsRed(State s) throws Result, InterruptedException {
         	logger.logDfsRedStart(id, s);
         	
             boolean tRed;
@@ -133,7 +73,7 @@ public class NNDFS implements NDFS {
         }
 
 
-        private void dfsBlue(State s) throws Result, InterruptedException {
+        protected void dfsBlue(State s) throws Result, InterruptedException {
         	logger.logDfsBlueStart(id, s);
         	
             boolean tRed;
@@ -186,64 +126,28 @@ public class NNDFS implements NDFS {
 
     }
 
-
+    
     public NNDFS(File file) {
-        this.file = file;
-        this.stateRed = new BooleanHashMap<State>(new Boolean(false));
-        this.stateCount = new IntegerHashMap<State>(new Integer(0));
+    	super(file);
         
         logger = new Logger(file);
     }
-
-
-    public void init(int nrOfThreads) {
-    	this.swarm = new ArrayList<Bird>();
-    	for (int i = 1; i <= nrOfThreads; i++) {
-    		this.swarm.add(new Bird(i));
-    	}
-    }
-
-    private void nndfs() throws Result {
-        boolean foundCycle = false;
-        int foundBy = 0;
-        
-        ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
-        CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
-        
-        logger.start();
-        
-        // setup threads for each of the callables 
-        for (int i = 0; i < this.swarm.size(); i++) {
-            cs.submit(swarm.get(i));
-        }
-
-        // Wait for the first thread to return. If an exception is thrown the 
-        // completion service is shut down and a CycleFound will be thrown.
-        try {
-			int result = cs.take().get();
-			if (result > 0) {
-				foundBy = result;
-			} else {
-				foundBy = -result;
-				foundCycle = true;
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}
-        ex.shutdownNow();
+    
+    public void tearDown() {
         logger.stop();
         logger.printLogs();
-
-        if (foundCycle) {
-            throw new CycleFound(foundBy);
-        } else {
-            throw new NoCycleFound();
-        }
     }
 
-
-	public void ndfs() throws Result {
-        nndfs();
+    protected void nndfs() throws Result {
+        logger.start();
+        super.nndfs();
     }
+
+	@Override
+	public void init(int nrOfThreads) {
+    	for (int i = 1; i <= nrOfThreads; i++) {
+    		super.swarm.add(new Bird(i, file));
+    	}
+	}
 
 }
