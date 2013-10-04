@@ -1,4 +1,4 @@
-package ndfs.mcndfs_log;
+package helperClasses.logger;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;

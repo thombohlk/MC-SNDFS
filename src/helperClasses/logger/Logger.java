@@ -1,4 +1,4 @@
-package ndfs.mcndfs_log;
+package helperClasses.logger;
 
 import graph.Graph;
 import graph.GraphFactory;
@@ -39,12 +39,10 @@ public class Logger {
     private AtomicLong dfsRedDoneCounter;
     private AtomicLong waitCounter;
     
-    private File file;
+	private Graph graph;
     	
 	class GraphCounter {
 
-		private Graph graph;
-		
 		private double totalNrOfStates = 0;
 		private int totalNrOfUnvisitedBlueStates = 0;
 		private int totalNrOfUnvisitedRedStates = 0;
@@ -55,11 +53,6 @@ public class Logger {
 		
 		public GraphCounter() {
 			visitedStates = new HashSet<State>();
-	        try {
-				this.graph = GraphFactory.createGraph(file);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
 		}
 		
 		public void count() {
@@ -121,7 +114,22 @@ public class Logger {
 		
 	}
 
+    public Logger(Graph graph) {
+    	initVariables();
+    	this.graph = graph;
+    }
+
+
     public Logger(File file) {
+    	initVariables();
+    	try {
+			this.graph = GraphFactory.createGraph(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    private void initVariables() {
     	dfsBlueCount = new ConcurrentLongHashMap<Long>(-1);
     	dfsBlueStartCount = new ConcurrentLongHashMap<Long>(-1);
     	dfsBlueDoneCount = new ConcurrentLongHashMap<Long>(-1);
@@ -140,11 +148,9 @@ public class Logger {
 
     	stateBlueVisits = new ConcurrentHashMap<Integer, HashSet<State>>();
     	stateRedVisits = new ConcurrentHashMap<Integer, HashSet<State>>();
-    	
-    	this.file = file;
-    }
-    
-    public void start() {
+	}
+
+	public void start() {
     	start = System.currentTimeMillis();
 		timer = new Timer();
 		timer.schedule(new TimerTask() {
@@ -209,6 +215,7 @@ public class Logger {
 		
 		double total = 0;
 		int nrOfThreads = 0;
+		System.out.println(visitedStates.size());
 		for (Integer i : visitedStates.keySet()) {
 			total += visitedStates.get(i).size();
 			System.out.println(i + ": " + visitedStates.get(i).size());
@@ -223,7 +230,7 @@ public class Logger {
 	synchronized public void logDfsBlueStart(int id, State s) {
 		dfsBlueCounter.incrementAndGet();
 		dfsBlueStartCounter.incrementAndGet();
-		
+
 		HashSet<State> set;
 		if (stateBlueVisits.containsKey(id)) {
 			set = stateBlueVisits.get(id);
@@ -232,7 +239,6 @@ public class Logger {
 		}
 		set.add(s);
 		stateBlueVisits.put(id, set);
-		
 	}
 
 	synchronized public void logDfsBlueDone() {

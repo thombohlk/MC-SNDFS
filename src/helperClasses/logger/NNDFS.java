@@ -1,4 +1,4 @@
-package ndfs.mcndfs_log;
+package helperClasses.logger;
 
 import graph.State;
 import helperClasses.Color;

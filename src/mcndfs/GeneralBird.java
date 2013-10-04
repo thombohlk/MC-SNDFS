@@ -29,7 +29,6 @@ public abstract class GeneralBird implements Callable<Integer> {
         try {
             this.graph = GraphFactory.createGraph(file);
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

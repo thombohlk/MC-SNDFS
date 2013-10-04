@@ -21,8 +21,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	protected File file;
 	protected BooleanHashMap<State> stateRed;
 	protected IntegerHashMap<State> stateCount;
-	public ArrayList<GeneralBird> swarm;
-
+	protected ArrayList<GeneralBird> swarm;
 
 	public MCNDFS(File file) {
         this.file = file;

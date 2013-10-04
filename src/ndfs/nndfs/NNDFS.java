@@ -19,8 +19,8 @@ public class NNDFS implements NDFS {
 
 
 
-    private Graph graph;
-    private Colors colors; 
+    protected Graph graph;
+    protected Colors colors; 
 
 
 
@@ -37,7 +37,7 @@ public class NNDFS implements NDFS {
 
 
 
-    private void dfsRed(State s) throws Result {
+    protected void dfsRed(State s) throws Result {
         for (State t : graph.post(s)) {
             if (colors.hasColor(t, Color.CYAN)) {
                 throw new CycleFound();
@@ -50,7 +50,7 @@ public class NNDFS implements NDFS {
     }
 
 
-    private void dfsBlue(State s) throws Result {
+    protected void dfsBlue(State s) throws Result {
         colors.color(s, Color.CYAN);
         for (State t : graph.post(s)) {
             if (colors.hasColor(t, Color.WHITE)) {
@@ -67,7 +67,7 @@ public class NNDFS implements NDFS {
     }
     
 
-    private void nndfs(State s) throws Result {
+    protected void nndfs(State s) throws Result {
         dfsBlue(s);
         throw new NoCycleFound();
     }

@@ -22,58 +22,25 @@ import helperClasses.BooleanHashMap;
 import helperClasses.Colors;
 import helperClasses.Color;
 import helperClasses.IntegerHashMap;
+import mcndfs.GeneralBird;
+import mcndfs.MCNDFS;
 import ndfs.NDFS;
 import ndfs.Result;
 import ndfs.CycleFound;
 import ndfs.NoCycleFound;
 
-public class NNDFS implements NDFS {
+public class NNDFS extends MCNDFS {
 
-    volatile private BooleanHashMap<State> stateRed;
-    volatile private Map<State, Integer> stateCount;
     volatile private Map<State, Integer> stateVisited;
 
-    private ArrayList<Bird> swarm;
-    private File file;
-    private int nrOfThreads;
-
-
-    class Bird implements Callable<Integer> {
-
-        int id;
-        private Graph graph;
-        private State initialState;
-        private Colors localColors;
-        private Map<State, Boolean> localStatePink;
-
+    class Bird extends GeneralBird {
 
         Bird(int id) {
-            try {
-                this.graph = GraphFactory.createGraph(file);
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            this.id = id;
-            this.initialState = graph.getInitialState();
-            this.localStatePink = new BooleanHashMap<State>(new Boolean(false));
-            this.localColors = new Colors(new HashMap<State, Color>());
+        	super(id, file);
         }
-
-
-        public Integer call() throws Exception {
-            try {
-                dfsBlue(initialState);
-            } catch (Result e) {
-                return -(this.id);
-            }
-
-            return this.id;
-        }
-
-
-        private void dfsRed(State s) throws Result, InterruptedException {
+        
+        @Override
+        protected void dfsRed(State s) throws Result, InterruptedException {
         	synchronized (stateVisited) {
         		int value = stateVisited.get(s);
 				stateVisited.put(s, value + 1);
@@ -124,7 +91,8 @@ public class NNDFS implements NDFS {
             localStatePink.put(s, false);
         }
 
-        private void dfsBlue(State s) throws Result, InterruptedException {
+        @Override
+        protected void dfsBlue(State s) throws Result, InterruptedException {
         	synchronized (stateVisited) {
         		int value = stateVisited.get(s);
 				stateVisited.put(s, value + 1);
@@ -198,61 +166,16 @@ public class NNDFS implements NDFS {
 
 
     public NNDFS(File file) {
-        this.file = file;
-        this.stateRed = new BooleanHashMap<State>(new Boolean(false));
-        this.stateCount = new IntegerHashMap<State>(new Integer(0));
-        this.stateVisited = new IntegerHashMap<State>(new Integer(0));
+    	super(file);
+    	this.stateVisited = new IntegerHashMap<State>(new Integer(0));
     }
 
-
+    @Override
     public void init(int nrOfThreads) {
-    	this.nrOfThreads = nrOfThreads;
-    	this.swarm = new ArrayList<Bird>();
     	for (int i = 1; i <= nrOfThreads; i++) {
-    		this.swarm.add(new Bird(i));
+    		super.swarm.add(new Bird(i));
     	}
     }
-
-    private void nndfs() throws Result {
-        boolean foundCycle = false;
-        int foundBy = 0;
-        
-        ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
-        CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
-
-        // setup threads for each of the callables 
-        for (int i = 0; i < this.swarm.size(); i++) {
-            cs.submit(swarm.get(i));
-        }
-
-        // Wait for the first thread to return. If an exception is thrown the 
-        // completion service is shut down and a CycleFound will be thrown.
-        try {
-			int result = cs.take().get();
-			if (result > 0) {
-				foundBy = result;
-			} else {
-				foundBy = -result;
-				foundCycle = true;
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        ex.shutdownNow();
-
-        if (foundCycle) {
-            throw new CycleFound(foundBy);
-        } else {
-            throw new NoCycleFound();
-        }
-    }
-
-
-    public void ndfs() throws Result {
-        nndfs();
-    }
-
 
 	@Override
 	public void tearDown() {
