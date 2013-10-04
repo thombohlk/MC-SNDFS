@@ -9,8 +9,6 @@ import ndfs.Result;
 
 public class NNDFS_log extends NNDFS {
 
-	protected Logger logger;
-
     class Bird extends NNDFS.Bird {
 
         Bird(int id) {
@@ -49,7 +47,7 @@ public class NNDFS_log extends NNDFS {
     @Override
     protected void nndfs() throws Result {
         logger.start();
-        super.nndfs();
+       	super.nndfs();
     }
     
 	@Override

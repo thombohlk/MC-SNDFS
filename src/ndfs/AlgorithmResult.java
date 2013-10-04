@@ -32,4 +32,20 @@ public class AlgorithmResult extends Result implements Comparable {
 		return (int) (this.duration - ((AlgorithmResult) o).duration);
 	}
 
+	public void printUserFriendly() {
+		System.out.println(this.version + " took " + this.duration + "ms");
+		System.out.println(this.result.getMessage());
+		if (super.logger != null) {
+			super.logger.printUserFriendly();
+		}
+	}
+
+	public void printCSVOutput() {
+		System.out.print(this.version + ", " + this.duration);
+		if (super.logger != null) {
+			super.logger.printCSVOutput();
+		}
+		System.out.println();
+	}
+
 }

@@ -3,6 +3,7 @@ package mcndfs;
 import graph.State;
 import helperClasses.BooleanHashMap;
 import helperClasses.IntegerHashMap;
+import helperClasses.logger.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	protected BooleanHashMap<State> stateRed;
 	protected IntegerHashMap<State> stateCount;
 	protected ArrayList<GeneralBird> swarm;
+	protected Logger logger;
 
 	public MCNDFS(File file) {
         this.file = file;
@@ -33,6 +35,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
     protected void nndfs() throws Result {
         boolean foundCycle = false;
         int foundBy = 0;
+        Result r;
 
         ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
@@ -58,10 +61,13 @@ public abstract class MCNDFS implements MCNDFSInterface {
         ex.shutdownNow();
 
         if (foundCycle) {
-            throw new CycleFound(foundBy);
+            r = new CycleFound(foundBy);
         } else {
-            throw new NoCycleFound();
+            r = new NoCycleFound();
         }
+        r.setLogger(logger);
+        throw r;
+        
     }
 
 

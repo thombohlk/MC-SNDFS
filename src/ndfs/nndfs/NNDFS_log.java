@@ -1,7 +1,6 @@
 package ndfs.nndfs;
 
 
-
 import graph.Graph;
 import graph.State;
 import helperClasses.Color;
@@ -14,13 +13,8 @@ import ndfs.NoCycleFound;
 import ndfs.Result;
 
 
-
 public class NNDFS_log extends NNDFS {
 
-
-	Logger logger;
-	
-	
     public NNDFS_log(Graph graph, Map<State, Color> colorStore) {
     	super(graph, colorStore);
     	logger = new Logger(graph);

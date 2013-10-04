@@ -10,8 +10,6 @@ import ndfs.mcndfs_extended.NNDFS.Bird;
 
 public class NNDFS_log extends NNDFS {
 
-	protected Logger logger;
-
     class Bird extends NNDFS.Bird {
 
         Bird(int id) {

@@ -1,5 +1,7 @@
 package ndfs;
 
+import helperClasses.logger.Logger;
+
 
 
 public class Result extends Throwable {
@@ -7,6 +9,7 @@ public class Result extends Throwable {
 
 
     private static final long serialVersionUID = 1L;
+    protected Logger logger;
 
 
 
@@ -22,4 +25,12 @@ public class Result extends Throwable {
     	}
 		return a.getName().equals(b.getName());
     }
+
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
+
+	public Logger getLogger() {
+		return this.logger;
+	}
 }

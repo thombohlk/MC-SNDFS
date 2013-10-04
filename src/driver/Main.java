@@ -1,28 +1,17 @@
 package driver;
 
+import graph.State;
+import helperClasses.Analyser;
+import helperClasses.Color;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Random;
+import java.util.Map;
 
-import graph.GraphFactory;
-import graph.Graph;
-import graph.State;
-import helperClasses.Color;
-import mcndfs.MCNDFS;
 import ndfs.AlgorithmResult;
-import ndfs.NDFS;
-import ndfs.NDFSFactory;
-import ndfs.Result;
 
 public class Main {
-
-	private static String[] versions = { "naive", "extended", "lock", "nosync",
-			"optimalPermutation2", "optimalPermutation3" };
 
 	private static class ArgumentException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -39,65 +28,38 @@ public class Main {
 		System.out.println("    <version> is one of {seq}");
 	}
 
-	private static void runNDFS(String version, Map<State, Color> colorStore,
-			File file, boolean log) throws FileNotFoundException, AlgorithmResult {
-
-		Graph graph = GraphFactory.createGraph(file);
-		NDFS ndfs = NDFSFactory.createNNDFS(graph, colorStore, log);
-		long start = System.currentTimeMillis();
-		long end;
-		try {
-			ndfs.ndfs();
-			throw new Error("No result returned by " + version);
-		} catch (Result r) {
-			end = System.currentTimeMillis();
-			throw new AlgorithmResult(r, end - start, version);
-		} finally {
-			ndfs.tearDown();
-		}
-	}
-
-	private static void runMCNDFS(String version, File file, int nrOfThreads, boolean log)
-			throws FileNotFoundException, InstantiationException,
-			AlgorithmResult {
-
-		MCNDFS mcndfs = NDFSFactory.createMCNDFS(version, file, log);
-		mcndfs.init(nrOfThreads);
-		long start = System.currentTimeMillis();
-		long end;
-		try {
-			mcndfs.ndfs();
-			throw new Error("No result returned by " + version);
-		} catch (Result r) {
-			end = System.currentTimeMillis();
-			throw new AlgorithmResult(r, end - start, version);
-		} finally {
-			mcndfs.tearDown();
-		}
-	}
-
 	private static void dispatch(File file, String version, int nrOfThreads,
-			boolean log) throws ArgumentException, FileNotFoundException,
+			String mode) throws ArgumentException, FileNotFoundException,
 			InstantiationException {
 
 		try {
-			if (version.equals("seq")) {
+			if (mode.equals("analyse")) {
+				Analyser.makeComparison(file, nrOfThreads, 3);
+			} else if (version.equals("seq")) {
 				if (nrOfThreads != 1) {
 					throw new ArgumentException(
 							"seq can only run with 1 worker");
 				}
 				Map<State, Color> map = new HashMap<State, Color>();
-				runNDFS("seq", map, file, log);
+				Executor.runNDFS("seq", map, file, mode);
 			} else if (version
-					.matches("naive|extended|optimalPermutation|optimalPermutation2|optimalPermutation3|lock|nosync|log")) {
-				runMCNDFS(version, file, nrOfThreads, log);
+					.matches("naive|extended|optimalPermutation|optimalPermutation2|optimalPermutation3|lock|nosync")) {
+				Executor.runMCNDFS(version, file, nrOfThreads, mode);
 			} else {
-				throw new ArgumentException("Unkown version: " + version + (log ? "_log" : "?"));
+				throw new ArgumentException("Unkown version: " + version + (mode.equals("log") ? "_log" : "?"));
 			}
 		} catch (AlgorithmResult r) {
-			System.out.println(r.getMessage());
-			System.out.printf("%s took %d ms\n", r.getVersion(),
-					r.getDuration());
+			if (mode.equals("none")) {
+				// default output
+				System.out.println(r.getMessage());
+				System.out.printf("%s took %d ms\n", r.getVersion(),
+						r.getDuration());
+			} else if (mode.equals("performance")) {
+				// log performance
+				System.out.println(r.getDuration());
+			} else {
+				// let logging do the output
+			}
 		}
 
 	}
@@ -106,94 +68,30 @@ public class Main {
 			int nrOfIterations) throws FileNotFoundException,
 			InstantiationException {
 		if (file.getName().equals("all")) {
-			// TODO
+			Analyser analyser = new Analyser();
+//			analyser.init(file, nrOfThreads);
 		} else {
-			runComparisonOnFile(file, nrOfThreads, nrOfIterations);
+//			runComparisonOnFile(file, nrOfThreads, nrOfIterations);
 		}
-	}
-
-	/**
-	 * Performs all versions of the NDFS algorithm and compares outputs.
-	 * 
-	 * @param file
-	 * @param nrOfThreads
-	 * @throws FileNotFoundException
-	 * @throws InstantiationException
-	 */
-	private static void runComparisonOnFile(File file, int nrOfThreads,
-			int nrOfIterations) throws FileNotFoundException,
-			InstantiationException {
-		AlgorithmResult[][] results = new AlgorithmResult[versions.length + 1][nrOfIterations];
-
-		for (int i = 0; i < nrOfIterations; i++) {
-			System.out.println("Iteration " + (i + 1));
-			try {
-				System.out.print("Running sequential algorithm... ");
-				runNDFS("seq", new HashMap<State, Color>(), file, false);
-			} catch (AlgorithmResult result) {
-				results[0][i] = result;
-				System.out.print(result.getDuration() + " ms\n");
-			}
-
-			for (int j = 1; j < versions.length + 1; j++) {
-				String version = versions[j - 1];
-				System.out.print("Running " + version + " algorithm... ");
-				try {
-					runMCNDFS(version, file, nrOfThreads, false);
-				} catch (AlgorithmResult result) {
-					results[j][i] = result;
-					System.out.print("\t" + result.getDuration() + " ms\t"
-							+ result.getMessage() + "\n");
-				}
-			}
-			System.out.println("");
-		}
-
-		ArrayList<AlgorithmResult> averages = new ArrayList<AlgorithmResult>();
-		for (int i = 0; i < results.length; i++) {
-			Long total = (long) 0;
-			for (int j = 0; j < results[0].length; j++) {
-				total = total + results[i][j].getDuration();
-			}
-			Long average = total / results[0].length;
-			AlgorithmResult ar = new AlgorithmResult(new Result("dummy"),
-					average, (i == 0 ? "seq" : versions[i - 1]));
-			averages.add(ar);
-		}
-
-		Collections.sort(averages);
-		for (int i = 0; i < averages.size(); i++) {
-			AlgorithmResult result = averages.get(i);
-			System.out.println((i + 1) + ": " + result.getVersion() + " at "
-					+ result.getDuration() + "ms.");
-		}
-
-		for (int i = 0; i < results.length; i++) {
-			for (int j = 0; j < results[0].length; j++) {
-				if (!results[i][j].getResult().isEqualTo(
-						results[i][0].getResult())) {
-					System.out.println("Not all outputs are the same for "
-							+ (i == 0 ? "seq" : versions[i - 1]) + ".");
-					return;
-				}
-			}
-		}
-		System.out.println("All outputs are the same!");
 	}
 
 	public static void main(String[] argv) {
 		try {
-			boolean log = false;
+			String mode = "none";
 			if (argv.length < 3 || argv.length > 4)
 				throw new ArgumentException("Wrong number of arguments");
 			if (argv.length == 4) {
-				log = true;
+				if (argv[3].matches("log|performance|analyse")) {
+					mode = argv[3];
+				} else {
+					throw new ArgumentException("The fourth argument should be either 'log' or 'performance'.");
+				}
 			}
 			File file = new File(argv[0]);
 			String version = argv[1];
 			int nrOfThreads = new Integer(argv[2]);
 
-			dispatch(file, version, nrOfThreads, log);
+			dispatch(file, version, nrOfThreads, mode);
 		} catch (FileNotFoundException e) {
 			System.err.println(e.getMessage());
 		} catch (ArgumentException e) {

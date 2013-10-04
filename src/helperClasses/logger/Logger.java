@@ -215,7 +215,6 @@ public class Logger {
 		
 		double total = 0;
 		int nrOfThreads = 0;
-		System.out.println(visitedStates.size());
 		for (Integer i : visitedStates.keySet()) {
 			total += visitedStates.get(i).size();
 			System.out.println(i + ": " + visitedStates.get(i).size());
@@ -271,5 +270,17 @@ public class Logger {
 
 	synchronized public void logDecrementWait() {
     	waitCounter.decrementAndGet();
+	}
+
+
+	public void printUserFriendly() {
+		printAverageNrOfNodes("blue", stateBlueVisits);
+		printAverageNrOfNodes("red", stateRedVisits);
+		printOverlap();
+	}
+
+
+	public void printCSVOutput() {
+		System.out.print("some nice output");
 	}
 }
