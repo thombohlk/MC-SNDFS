@@ -47,12 +47,5 @@ public class NNDFS_log extends NNDFS {
     	logger.start();
         nndfs(graph.getInitialState());
     }
-
-
-
-	@Override
-	public void tearDown() {
-		logger.stop();
-		logger.printLogs();
-	}
+    
 }

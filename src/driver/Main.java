@@ -1,7 +1,6 @@
 package driver;
 
 import graph.State;
-import helperClasses.Analyser;
 import helperClasses.Color;
 
 import java.io.File;
@@ -33,8 +32,10 @@ public class Main {
 			InstantiationException {
 
 		try {
-			if (mode.equals("analyse")) {
-				Analyser.makeComparison(file, nrOfThreads, 3);
+			if (mode.matches("CSV|user")) {
+				Analyser analyser = new Analyser();
+				analyser.init(file, version, nrOfThreads, mode);
+				analyser.makeComparison(3);
 			} else if (version.equals("seq")) {
 				if (nrOfThreads != 1) {
 					throw new ArgumentException(
@@ -55,24 +56,14 @@ public class Main {
 				System.out.printf("%s took %d ms\n", r.getVersion(),
 						r.getDuration());
 			} else if (mode.equals("performance")) {
-				// log performance
+				// print performance
 				System.out.println(r.getDuration());
 			} else {
-				// let logging do the output
+				// print logs
+				System.out.print(r.getLogger().getResultsCSV());
 			}
 		}
 
-	}
-
-	private static void runComparison(File file, int nrOfThreads,
-			int nrOfIterations) throws FileNotFoundException,
-			InstantiationException {
-		if (file.getName().equals("all")) {
-			Analyser analyser = new Analyser();
-//			analyser.init(file, nrOfThreads);
-		} else {
-//			runComparisonOnFile(file, nrOfThreads, nrOfIterations);
-		}
 	}
 
 	public static void main(String[] argv) {
@@ -81,7 +72,7 @@ public class Main {
 			if (argv.length < 3 || argv.length > 4)
 				throw new ArgumentException("Wrong number of arguments");
 			if (argv.length == 4) {
-				if (argv[3].matches("log|performance|analyse")) {
+				if (argv[3].matches("CSV|user")) {
 					mode = argv[3];
 				} else {
 					throw new ArgumentException("The fourth argument should be either 'log' or 'performance'.");

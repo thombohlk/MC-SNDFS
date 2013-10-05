@@ -84,11 +84,12 @@ public class NNDFS implements NDFS {
         nndfs(graph.getInitialState());
     }
 
-
-
-	@Override
+    @Override
 	public void tearDown() {
-		// TODO Auto-generated method stub
-		
+		if (logger != null) {
+			logger.stop();
+			logger.parseData();
+		}
 	}
+
 }

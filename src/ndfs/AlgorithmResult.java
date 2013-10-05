@@ -1,7 +1,13 @@
 package ndfs;
 
-public class AlgorithmResult extends Result implements Comparable {
+import helperClasses.logger.Logger;
 
+public class AlgorithmResult extends Result implements Comparable<AlgorithmResult> {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private long duration;
 	private Result result;
 	private String version;
@@ -18,6 +24,10 @@ public class AlgorithmResult extends Result implements Comparable {
 		return this.duration;
 	}
 	
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
+	
 	public Result getResult() {
 		return this.result;
 	}
@@ -27,25 +37,22 @@ public class AlgorithmResult extends Result implements Comparable {
 	}
 
 	@Override
-	public int compareTo(Object o) {
+	public int compareTo(AlgorithmResult o) {
 		// TODO Auto-generated method stub
 		return (int) (this.duration - ((AlgorithmResult) o).duration);
 	}
 
+	@Override
+	public Logger getLogger() {
+		return (this.logger == null ? this.result.getLogger() : this.logger);
+	}
+	
 	public void printUserFriendly() {
 		System.out.println(this.version + " took " + this.duration + "ms");
 		System.out.println(this.result.getMessage());
 		if (super.logger != null) {
-			super.logger.printUserFriendly();
+//			super.logger.printUserFriendly();
 		}
-	}
-
-	public void printCSVOutput() {
-		System.out.print(this.version + ", " + this.duration);
-		if (super.logger != null) {
-			super.logger.printCSVOutput();
-		}
-		System.out.println();
 	}
 
 }

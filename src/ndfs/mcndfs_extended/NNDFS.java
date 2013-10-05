@@ -126,12 +126,5 @@ public class NNDFS extends MCNDFS {
     		super.swarm.add(new Bird(i));
     	}
     }
-
-
-	@Override
-	public void tearDown() {
-		// TODO Auto-generated method stub
-		
-	}
     
 }

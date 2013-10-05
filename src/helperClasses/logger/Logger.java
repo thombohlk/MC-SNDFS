@@ -15,6 +15,8 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import ndfs.AlgorithmResult;
+
 public class Logger {
 	
 	private long start, end;
@@ -40,79 +42,7 @@ public class Logger {
     private AtomicLong waitCounter;
     
 	private Graph graph;
-    	
-	class GraphCounter {
-
-		private double totalNrOfStates = 0;
-		private int totalNrOfUnvisitedBlueStates = 0;
-		private int totalNrOfUnvisitedRedStates = 0;
-		private int totalNrOfBlueVisists = 0;
-		private int totalNrOfRedVisists = 0;
-		
-		private HashSet<State> visitedStates;
-		
-		public GraphCounter() {
-			visitedStates = new HashSet<State>();
-		}
-		
-		public void count() {
-			State s = graph.getInitialState();
-			processState(s);
-		}
-		
-		private void processState(State s) {
-			if (visitedStates.contains(s)) {
-				return;
-			}
-			visitedStates.add(s);
-			// count this state
-			totalNrOfStates++;
-			countState(s);
-			
-			// count states in post
-			for (State t : graph.post(s)) {
-				processState(t);
-			}
-		}
-
-		private void countState(State s) {
-			boolean visitedBlue = false;
-			boolean visitedRed = false;
-			
-			for (Integer i : stateBlueVisits.keySet()) {
-				if (stateBlueVisits.get(i).contains(s)) {
-					totalNrOfBlueVisists++;
-					visitedBlue = true;
-				}
-			}
-			if (! visitedBlue) {
-				totalNrOfUnvisitedBlueStates++;
-			}
-			
-			for (Integer i : stateRedVisits.keySet()) {
-				if (stateRedVisits.get(i).contains(s)) {
-					totalNrOfRedVisists++;
-					visitedRed = true;
-				}
-			}
-			if (! visitedRed) {
-				totalNrOfUnvisitedRedStates++;
-			}
-		}
-
-		public void printResults() {
-			System.out.println();
-			System.out.println("Total amount of states: " + totalNrOfStates);
-			System.out.println("Total number of blue visits: " + totalNrOfBlueVisists);
-			System.out.println("Total number of red visits: " + totalNrOfRedVisists);
-			System.out.println("Total number of unvisited blue states: " + totalNrOfUnvisitedBlueStates);
-			System.out.println("Total number of unvisited red states: " + totalNrOfUnvisitedRedStates);
-			System.out.println("Blue overlap coefficient: " + (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) );
-			System.out.println("Red overlap coefficient: " + (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates)) );
-			System.out.println();
-		}
-		
-	}
+	private GraphAnalyser graphAnalyser;
 
     public Logger(Graph graph) {
     	initVariables();
@@ -127,6 +57,11 @@ public class Logger {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+    }
+    
+    // TODO: remove this??
+    public Logger() {
+    	initVariables();
     }
     
     private void initVariables() {
@@ -153,12 +88,12 @@ public class Logger {
 	public void start() {
     	start = System.currentTimeMillis();
 		timer = new Timer();
-		timer.schedule(new TimerTask() {
-			public void run()  {
-				long time = System.currentTimeMillis() - start;
-				logIteration(time);
-			}
-		}, 1, 1);
+//		timer.schedule(new TimerTask() {
+//			public void run()  {
+//				long time = System.currentTimeMillis() - start;
+//				logIteration(time);
+//			}
+//		}, 1, 1);
     }
     
     public void stop() {
@@ -176,17 +111,17 @@ public class Logger {
 		waitCount.put(time, waitCounter);
 	}
 
-    public void printLogs() {
-    	printAverageNrOfNodes("blue", stateBlueVisits);
-    	printAverageNrOfNodes("red", stateRedVisits);
-    	printOverlap();
+    public void parseData() {
+    	analyseOverlap();
+//    	printAverageNrOfNodes("blue", stateBlueVisits);
+//    	printAverageNrOfNodes("red", stateRedVisits);
 //    	printHeartBeats();
 	}
 
-	private void printOverlap() {
-		GraphCounter gc = new GraphCounter();
-		gc.count();
-		gc.printResults();
+	private void analyseOverlap() {
+		graphAnalyser = new GraphAnalyser(this.graph, this.stateBlueVisits, this.stateRedVisits);
+		graphAnalyser.count();
+//		graphAnalyser.printResults();
 	}
 
 	private void printHeartBeats() {
@@ -272,15 +207,56 @@ public class Logger {
     	waitCounter.decrementAndGet();
 	}
 
-
-	public void printUserFriendly() {
-		printAverageNrOfNodes("blue", stateBlueVisits);
-		printAverageNrOfNodes("red", stateRedVisits);
-		printOverlap();
+	public String getResultsCSV() {
+		String result = "";
+		result += graphAnalyser.getResultsCSV();
+		
+		return result;
 	}
 
 
-	public void printCSVOutput() {
-		System.out.print("some nice output");
+	public GraphAnalyser getGraphAnalyser() {
+		return this.graphAnalyser;
+	}
+
+
+	public void setGraphAnalyser(GraphAnalyser graphAnalyser) {
+		this.graphAnalyser = graphAnalyser;
+	}
+
+
+	public static Logger calculateAverageLogger(AlgorithmResult[] results) {
+		Logger logger = new Logger();
+		GraphAnalyser ga;
+
+		int totalNrOfUnvisitedBlueStates = 0;
+		int totalNrOfUnvisitedRedStates = 0;
+		int totalNrOfBlueVisists = 0;
+		int totalNrOfRedVisists = 0;
+		
+		for (int i = 0; i < results.length; i++) {
+			ga = results[i].getLogger().getGraphAnalyser();
+			totalNrOfUnvisitedBlueStates += ga.totalNrOfUnvisitedBlueStates;
+			totalNrOfUnvisitedRedStates += ga.totalNrOfUnvisitedRedStates;
+			totalNrOfBlueVisists += ga.totalNrOfBlueVisists;
+			totalNrOfRedVisists += ga.totalNrOfRedVisists;
+		}
+		
+		ga = new GraphAnalyser(null, null, null);
+		ga.totalNrOfStates = (int) results[0].getLogger().getGraphAnalyser().totalNrOfStates;
+		ga.totalNrOfUnvisitedBlueStates = totalNrOfUnvisitedBlueStates / results.length;
+		ga.totalNrOfUnvisitedRedStates = totalNrOfUnvisitedRedStates / results.length;
+		ga.totalNrOfBlueVisists = totalNrOfBlueVisists / results.length;
+		ga.totalNrOfRedVisists = totalNrOfRedVisists / results.length;
+		
+		logger.setGraphAnalyser(ga);
+		
+		return logger;
+	}
+
+
+	public String getResultsUser() {
+		String result = graphAnalyser.getResultsUser();
+		return result;
 	}
 }

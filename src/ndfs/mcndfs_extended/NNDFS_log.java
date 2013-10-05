@@ -50,11 +50,5 @@ public class NNDFS_log extends NNDFS {
         logger.start();
         super.nndfs();
     }
-    
-	@Override
-	public void tearDown() {
-		logger.stop();
-		logger.printLogs();
-	}
 
 }

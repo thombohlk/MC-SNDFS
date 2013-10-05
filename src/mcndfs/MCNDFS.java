@@ -74,4 +74,12 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	public void ndfs() throws Result {
         nndfs();
     }
+
+	public void tearDown() {
+		if (logger != null) {
+			logger.parseData();
+			logger.stop();
+		}
+	}
+	
 }
