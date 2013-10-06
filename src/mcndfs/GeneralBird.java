@@ -6,7 +6,7 @@ import graph.State;
 import helperClasses.BooleanHashMap;
 import helperClasses.Color;
 import helperClasses.Colors;
-import helperClasses.RandomSeed;
+import helperClasses.Global;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,7 +36,7 @@ public abstract class GeneralBird implements Callable<Integer> {
         this.initialState = graph.getInitialState();
         this.localStatePink = new BooleanHashMap<State>(new Boolean(false));
         this.localColors = new Colors(new HashMap<State, Color>());
-        this.rand = new Random(RandomSeed.SEED);
+        this.rand = new Random(Global.SEED);
     }
 
     /**

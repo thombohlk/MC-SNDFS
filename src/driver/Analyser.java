@@ -2,7 +2,8 @@ package driver;
 
 import graph.State;
 import helperClasses.Color;
-import helperClasses.RandomSeed;
+import helperClasses.Global;
+import helperClasses.logger.GraphAnalyser;
 import helperClasses.logger.Logger;
 
 import java.io.File;
@@ -16,35 +17,83 @@ import ndfs.Result;
 
 public class Analyser {
 
-	public static String[] versions = { "naive", "extended", "lock", "nosync",
+	public static String[] availableVersions = new String[] { "naive", "extended", "lock", "nosync",
 			"optimalPermutation2", "optimalPermutation3" };
+	public static String[] nrOfThreadsOptions = new String[] {"1", "2", "4", "8", "16", "32"};
 	
-	protected File file;
-	protected String version;
-	protected int nrOfThreads;
-	protected String outputType;
+	protected String fileArg;
+	protected String versionArg;
+	protected String nrOfThreadsArg;
+	protected String outputTypeArg;
+	
+	protected int nrOfIterations;
+	protected String[] versionsToAnalyse;
+	protected File[] filesToAnalyse;
+	protected String[] threadNrToAnalyse;
 	
 	public Analyser() {
 		
 	}
 
-	public void init(File file, String version, int nrOfThreads, String outputType) {
-		this.file = file;
-		this.version = version;
-		this.nrOfThreads = nrOfThreads;
-		this.outputType = outputType;
+	public void init(String fileArg, String version, String nrOfThreads, String outputType) {
+		this.fileArg = fileArg;
+		this.versionArg = version;
+		this.nrOfThreadsArg = nrOfThreads;
+		this.outputTypeArg = outputType;
 	}
 	
 	protected void makeComparison(int nrOfIterations) throws FileNotFoundException, InstantiationException {
-		if (this.version.equals("all")) {
-			for (int i = 0; i < Analyser.versions.length; i++) {
-				analyseVersion(Analyser.versions[i], this.nrOfThreads);
-			}
+		this.nrOfIterations = nrOfIterations;
+//		if (this.outputType.equals("CSV")) 
+//			System.out.println("version, " + "duration, " + GraphAnalyser.getCSVHeaders());
+		processVersions();
+		processNrOfThreads();
+		processFiles();
+		
+		startAnalysis(nrOfIterations);
+	}
+
+	private void processFiles() {
+		if (this.fileArg.equals("all")) {
+			File folder = new File("input");
+			filesToAnalyse = folder.listFiles();
 		} else {
-			analyseVersion(this.version, this.nrOfThreads);
+			String fileNames[] = fileArg.split("\\|");
+			filesToAnalyse = new File[fileNames.length];
+			for (int i = 0; i < fileNames.length; i++) {
+				File file = new File(fileNames[i]);
+				filesToAnalyse[i] = file;
+			}
+		}
+	}
+
+	protected void processVersions() {
+		if (this.versionArg.equals("all")) {
+			this.versionsToAnalyse = availableVersions;
+		} else {
+			this.versionsToAnalyse = versionArg.split("\\|");
+		}
+	}
+
+	protected void processNrOfThreads() {
+		if (this.nrOfThreadsArg.equals("all")) {
+			this.threadNrToAnalyse = nrOfThreadsOptions;
+		} else {
+			this.threadNrToAnalyse = nrOfThreadsArg.split("\\|");
+			
 		}
 	}
 	
+	protected void startAnalysis(int nrOfIterations) throws FileNotFoundException, InstantiationException {
+		for (String version : this.versionsToAnalyse) {
+			for (File file : this.filesToAnalyse) {
+				for (String nrOfThreads : this.threadNrToAnalyse) {
+					analyseVersion(version, file, Integer.valueOf(nrOfThreads), nrOfIterations);
+				}
+			}
+		}
+	}
+
 	/**
 	 * Performs all versions of the NDFS algorithm and compares outputs.
 	 * 
@@ -53,21 +102,23 @@ public class Analyser {
 	 * @throws FileNotFoundException
 	 * @throws InstantiationException
 	 */
-	protected void analyseVersion(String version, int nrOfIterations) throws FileNotFoundException,
+	protected void analyseVersion(String version, File file, int nrOfThreads, int nrOfIterations) throws FileNotFoundException,
 			InstantiationException {
 		AlgorithmResult[] results = new AlgorithmResult[nrOfIterations];
 
-		if (this.outputType.equals("user")) System.out.println("Analysing " + version + ".");
+		if (this.outputTypeArg.equals("user")) {
+			System.out.println("Analysing " + version + " with " + nrOfThreads + " on " + file.getName() + ".");
+		}
 		for (int i = 0; i < nrOfIterations; i++) {
-			if (this.outputType.equals("user")) System.out.println("Iteration " + (i+1) + "...");
-			RandomSeed.SEED = RandomSeed.SEED_ARRAY[i];
+			if (this.outputTypeArg.equals("user")) System.out.println("Iteration " + (i+1) + "...");
+			Global.SEED = Global.SEED_ARRAY[i%Global.SEED_ARRAY.length];
 			try {
-				Executor.runMCNDFS(version, this.file, nrOfThreads, "log");
+				Executor.runMCNDFS(version, file, nrOfThreads, "log");
 			} catch (AlgorithmResult result) {
 				results[i] = result;
 			}
 			try {
-				Executor.runMCNDFS(version, this.file, nrOfThreads, "none");
+				Executor.runMCNDFS(version, file, nrOfThreads, "none");
 			} catch (AlgorithmResult result) {
 				results[i].setDuration(result.getDuration());
 			}
@@ -92,7 +143,7 @@ public class Analyser {
 	}
 
 	private void printAlgorithmResult(AlgorithmResult result) {
-		switch (this.outputType) {
+		switch (this.outputTypeArg) {
 		case "user":
 			printAlgorithmResultUser(result);
 			break;
@@ -129,7 +180,7 @@ public class Analyser {
 	private static void runComparisonOnFile(File file, int nrOfThreads,
 			int nrOfIterations) throws FileNotFoundException,
 			InstantiationException {
-		AlgorithmResult[][] results = new AlgorithmResult[versions.length + 1][nrOfIterations];
+		AlgorithmResult[][] results = new AlgorithmResult[availableVersions.length + 1][nrOfIterations];
 
 		for (int i = 0; i < nrOfIterations; i++) {
 			System.out.println("Iteration " + (i + 1));
@@ -142,8 +193,8 @@ public class Analyser {
 				System.out.print(result.getDuration() + " ms\n");
 			}
 
-			for (int j = 1; j < versions.length + 1; j++) {
-				String version = versions[j - 1];
+			for (int j = 1; j < availableVersions.length + 1; j++) {
+				String version = availableVersions[j - 1];
 				System.out.print("Running " + version + " algorithm... ");
 				try {
 					Executor.runMCNDFS(version, file, nrOfThreads, "none");
@@ -165,7 +216,7 @@ public class Analyser {
 			}
 			Long average = total / results[0].length;
 			AlgorithmResult ar = new AlgorithmResult(new Result("dummy"),
-					average, (i == 0 ? "seq" : versions[i - 1]));
+					average, (i == 0 ? "seq" : availableVersions[i - 1]));
 			averages.add(ar);
 		}
 
@@ -181,7 +232,7 @@ public class Analyser {
 				if (!results[i][j].getResult().isEqualTo(
 						results[i][0].getResult())) {
 					System.out.println("Not all outputs are the same for "
-							+ (i == 0 ? "seq" : versions[i - 1]) + ".");
+							+ (i == 0 ? "seq" : availableVersions[i - 1]) + ".");
 					return;
 				}
 			}

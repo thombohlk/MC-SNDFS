@@ -22,7 +22,7 @@ import helperClasses.BooleanHashMap;
 import helperClasses.Color;
 import helperClasses.Colors;
 import helperClasses.IntegerHashMap;
-import helperClasses.RandomSeed;
+import helperClasses.Global;
 import mcndfs.GeneralBird;
 import mcndfs.MCNDFS;
 import ndfs.NDFS;

@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 
-class GraphAnalyser {
+public class GraphAnalyser {
 
 	public double totalNrOfStates = 0;
 	public int totalNrOfUnvisitedBlueStates = 0;
@@ -86,7 +86,7 @@ class GraphAnalyser {
 		result += totalNrOfUnvisitedBlueStates + ", ";
 		result += totalNrOfUnvisitedRedStates + ", ";
 		result += (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + ", ";
-		result += (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates)) + ", ";
+		result += (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates));
 		return result;
 	}
 	
@@ -104,7 +104,6 @@ class GraphAnalyser {
 		result += ("Total number of unvisited red states: " + totalNrOfUnvisitedRedStates + "\n");
 		result += ("Blue overlap coefficient: " + (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + "\n");
 		result += ("Red overlap coefficient: " + (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates)) + "\n");
-		result += ("\n");
 		return result;
 	}
 	

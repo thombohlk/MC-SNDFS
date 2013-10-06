@@ -27,16 +27,13 @@ public class Main {
 		System.out.println("    <version> is one of {seq}");
 	}
 
-	private static void dispatch(File file, String version, int nrOfThreads,
-			String mode) throws ArgumentException, FileNotFoundException,
+	private static void dispatch(File file, String version, int nrOfThreads) throws ArgumentException, FileNotFoundException,
 			InstantiationException {
 
+		// TODO: remove mode from this functions
+		String mode = "none";
 		try {
-			if (mode.matches("CSV|user")) {
-				Analyser analyser = new Analyser();
-				analyser.init(file, version, nrOfThreads, mode);
-				analyser.makeComparison(3);
-			} else if (version.equals("seq")) {
+			if (version.equals("seq")) {
 				if (nrOfThreads != 1) {
 					throw new ArgumentException(
 							"seq can only run with 1 worker");
@@ -65,24 +62,38 @@ public class Main {
 		}
 
 	}
+	
+	private static void dispatchAnalysis(String fileArg, String versionArg, String nrOfThreadsArg,
+			String mode) throws ArgumentException, FileNotFoundException,
+			InstantiationException {
+		Analyser analyser = new Analyser();
+		analyser.init(fileArg, versionArg, nrOfThreadsArg, mode);
+		analyser.makeComparison(3);
+	}
 
 	public static void main(String[] argv) {
 		try {
-			String mode = "none";
 			if (argv.length < 3 || argv.length > 4)
 				throw new ArgumentException("Wrong number of arguments");
 			if (argv.length == 4) {
 				if (argv[3].matches("CSV|user")) {
-					mode = argv[3];
+					String fileArg = argv[0];
+					String versionArg = argv[1];
+					String nrOfThreadsArg = argv[2];
+					String mode = argv[3];
+					
+					dispatchAnalysis(fileArg, versionArg, nrOfThreadsArg, mode);
 				} else {
-					throw new ArgumentException("The fourth argument should be either 'log' or 'performance'.");
+					throw new ArgumentException("The fourth argument should be either 'CSV' or 'user'.");
 				}
 			}
-			File file = new File(argv[0]);
-			String version = argv[1];
-			int nrOfThreads = new Integer(argv[2]);
-
-			dispatch(file, version, nrOfThreads, mode);
+			if (argv.length == 3) {
+				File file = new File(argv[0]);
+				String version = argv[1];
+				int nrOfThreads = new Integer(argv[2]);
+	
+				dispatch(file, version, nrOfThreads);
+			}
 		} catch (FileNotFoundException e) {
 			System.err.println(e.getMessage());
 		} catch (ArgumentException e) {
