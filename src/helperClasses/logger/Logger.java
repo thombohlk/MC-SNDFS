@@ -235,6 +235,7 @@ public class Logger {
 		int totalNrOfRedVisists = 0;
 		
 		for (int i = 0; i < results.length; i++) {
+			results[i].getLogger();
 			ga = results[i].getLogger().getGraphAnalyser();
 			totalNrOfUnvisitedBlueStates += ga.totalNrOfUnvisitedBlueStates;
 			totalNrOfUnvisitedRedStates += ga.totalNrOfUnvisitedRedStates;

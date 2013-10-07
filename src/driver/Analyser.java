@@ -107,18 +107,22 @@ public class Analyser {
 		AlgorithmResult[] results = new AlgorithmResult[nrOfIterations];
 
 		if (this.outputTypeArg.equals("user")) {
-			System.out.println("Analysing " + version + " with " + nrOfThreads + " on " + file.getName() + ".");
+			System.out.println("Analysing " + version + " with " + nrOfThreads + " threads on " + file.getName() + ".");
 		}
 		for (int i = 0; i < nrOfIterations; i++) {
 			if (this.outputTypeArg.equals("user")) System.out.println("Iteration " + (i+1) + "...");
 			Global.SEED = Global.SEED_ARRAY[i%Global.SEED_ARRAY.length];
 			try {
-				Executor.runMCNDFS(version, file, nrOfThreads, "log");
+				if (version.equals("seq"))
+					nrOfThreads = 1;
+				Executor.run(version, file, nrOfThreads, "log");
 			} catch (AlgorithmResult result) {
 				results[i] = result;
 			}
 			try {
-				Executor.runMCNDFS(version, file, nrOfThreads, "none");
+				if (version.equals("seq"))
+					nrOfThreads = 1;
+				Executor.run(version, file, nrOfThreads, "none");
 			} catch (AlgorithmResult result) {
 				results[i].setDuration(result.getDuration());
 			}
@@ -128,27 +132,27 @@ public class Analyser {
 		AlgorithmResult averageResult = new AlgorithmResult(new Result("All outputs are the same!"), average, version);
 		averageResult.setLogger(Logger.calculateAverageLogger(results));
 		
-		printAlgorithmResult(averageResult);
+		printAlgorithmResult(version, file, nrOfThreads, averageResult);
 	}
 
 	private static long calculateAverageResult(AlgorithmResult[] results) {
 		// average duration
-		long totalDuration = 0;
+		long total = 0;
 		for (int i = 0; i < results.length; i++) {
-			totalDuration = totalDuration + results[i].getDuration();
+			total = total + results[i].getDuration();
 		}
-		long average = totalDuration / results.length;
+		long average = total / results.length;
 		
 		return average;
 	}
 
-	private void printAlgorithmResult(AlgorithmResult result) {
+	private void printAlgorithmResult(String version, File file, int nrOfThreads, AlgorithmResult result) {
 		switch (this.outputTypeArg) {
 		case "user":
 			printAlgorithmResultUser(result);
 			break;
 		case "CSV":
-			printAlgorithmResultCSV(result);
+			printAlgorithmResultCSV(version, file, nrOfThreads, result);
 			break;
 
 		default:
@@ -156,8 +160,8 @@ public class Analyser {
 		}
 	}
 
-	private void printAlgorithmResultCSV(AlgorithmResult result) {
-		System.out.print(result.getVersion() + ", " + result.getDuration() + ", ");
+	private void printAlgorithmResultCSV(String version, File file, int nrOfThreads, AlgorithmResult result) {
+		System.out.print(result.getVersion() + ", " + version + ", " + file.getName() + ", " + nrOfThreads + ", " + result.getDuration() + ", ");
 		System.out.print(result.getLogger().getResultsCSV());
 		System.out.println();
 	}
@@ -186,7 +190,7 @@ public class Analyser {
 			System.out.println("Iteration " + (i + 1));
 			try {
 				System.out.print("Running sequential algorithm... ");
-				Executor.runNDFS("seq", new HashMap<State, Color>(), file, "none");
+				Executor.runNDFS("seq", file, "none");
 //				runNDFS("seq", new HashMap<State, Color>(), file, "none");
 			} catch (AlgorithmResult result) {
 				results[0][i] = result;

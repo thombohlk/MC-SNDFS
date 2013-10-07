@@ -38,14 +38,13 @@ public class NNDFS_log extends NNDFS {
 
     @Override
     protected void nndfs(State s) throws Result {
-        super.dfsBlue(s);
-        throw new NoCycleFound();
+        super.nndfs(s);
     }
 
 
     public void ndfs() throws Result {
     	logger.start();
-        nndfs(graph.getInitialState());
+        super.ndfs();
     }
     
 }

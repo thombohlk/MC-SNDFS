@@ -2,10 +2,6 @@ package ndfs;
 
 
 
-import graph.State;
-
-
-
 public interface NDFS {
 
 

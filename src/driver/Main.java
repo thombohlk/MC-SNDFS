@@ -38,8 +38,7 @@ public class Main {
 					throw new ArgumentException(
 							"seq can only run with 1 worker");
 				}
-				Map<State, Color> map = new HashMap<State, Color>();
-				Executor.runNDFS("seq", map, file, mode);
+				Executor.runNDFS("seq", file, mode);
 			} else if (version
 					.matches("naive|extended|optimalPermutation|optimalPermutation2|optimalPermutation3|lock|nosync")) {
 				Executor.runMCNDFS(version, file, nrOfThreads, mode);
