@@ -80,18 +80,18 @@ public class GraphAnalyser {
 
 	public String getResultsCSV() {
 		String result = "";
-		result += totalNrOfStates + ", ";
-		result += totalNrOfBlueVisists + ", ";
-		result += totalNrOfRedVisists + ", ";
-		result += totalNrOfUnvisitedBlueStates + ", ";
-		result += totalNrOfUnvisitedRedStates + ", ";
-		result += (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + ", ";
+		result += totalNrOfStates + ";\t";
+		result += totalNrOfBlueVisists + ";\t";
+		result += totalNrOfRedVisists + ";\t";
+		result += totalNrOfUnvisitedBlueStates + ";\t";
+		result += totalNrOfUnvisitedRedStates + ";\t";
+		result += (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + ";\t";
 		result += (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates));
 		return result;
 	}
 	
 	public static String getCSVHeaders() {
-		String result = "nr of states, nr of blue visits, nr of red visits, nr of unvisited blue states, nr of unvisited red states, blue overlap coefficient, red overlap coefficient";
+		String result = "#states;\t#blueVisits;\t#redVisits;\t#unvisitedBlueStates;\t#unvisitedRedStates;\tblueOverlapCoefficient;\tredOverlapCoefficient";
 		return result;
 	}
 

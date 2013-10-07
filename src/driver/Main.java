@@ -75,7 +75,7 @@ public class Main {
 			if (argv.length < 3 || argv.length > 4)
 				throw new ArgumentException("Wrong number of arguments");
 			if (argv.length == 4) {
-				if (argv[3].matches("CSV|user")) {
+				if (argv[3].matches("csv|csv_performance|user|user_performance")) {
 					String fileArg = argv[0];
 					String versionArg = argv[1];
 					String nrOfThreadsArg = argv[2];
@@ -83,7 +83,7 @@ public class Main {
 					
 					dispatchAnalysis(fileArg, versionArg, nrOfThreadsArg, mode);
 				} else {
-					throw new ArgumentException("The fourth argument should be either 'CSV' or 'user'.");
+					throw new ArgumentException("The fourth argument should be either 'csv', 'csv_performance' or 'user'.");
 				}
 			}
 			if (argv.length == 3) {
