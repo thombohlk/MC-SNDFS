@@ -67,7 +67,7 @@ public class Main {
 			InstantiationException {
 		Analyser analyser = new Analyser();
 		analyser.init(fileArg, versionArg, nrOfThreadsArg, mode);
-		analyser.makeComparison(3);
+		analyser.makeComparison();
 	}
 
 	public static void main(String[] argv) {

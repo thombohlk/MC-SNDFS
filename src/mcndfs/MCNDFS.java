@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import ndfs.CycleFound;
 import ndfs.NoCycleFound;
@@ -24,6 +25,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	protected IntegerHashMap<State> stateCount;
 	protected ArrayList<GeneralBird> swarm;
 	protected Logger logger;
+	protected ExecutorService executorService;
 
 	public MCNDFS(File file) {
         this.file = file;
@@ -37,8 +39,8 @@ public abstract class MCNDFS implements MCNDFSInterface {
         int foundBy = 0;
         Result r;
 
-        ExecutorService ex = Executors.newFixedThreadPool(swarm.size());
-        CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(ex);
+        executorService = Executors.newFixedThreadPool(swarm.size());
+        CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(executorService);
         
         // setup threads for each of the callables 
         for (int i = 0; i < this.swarm.size(); i++) {
@@ -58,7 +60,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-        ex.shutdownNow();
+        executorService.shutdownNow();
 
         if (foundCycle) {
             r = new CycleFound(foundBy);
@@ -76,6 +78,12 @@ public abstract class MCNDFS implements MCNDFSInterface {
     }
 
 	public void tearDown() {
+		try {
+			executorService.awaitTermination(30, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		if (logger != null) {
 			logger.parseData();
 			logger.stop();

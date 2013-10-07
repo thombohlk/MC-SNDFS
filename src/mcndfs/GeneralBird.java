@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import ndfs.NoCycleFound;
 import ndfs.Result;
 
 public abstract class GeneralBird implements Callable<Integer> {
@@ -54,8 +55,18 @@ public abstract class GeneralBird implements Callable<Integer> {
         return this.id;
     }
     
-    protected abstract void dfsBlue(State s) throws Result, InterruptedException;
+    protected void dfsBlue(State s) throws Result, InterruptedException {
+    	if (Thread.currentThread().isInterrupted())
+            terminate();
+    }
+
+	protected void dfsRed(State s) throws Result, InterruptedException {
+    	if (Thread.currentThread().isInterrupted())
+            terminate();
+    }
     
-    protected abstract void dfsRed(State s) throws Result, InterruptedException;
+    protected void terminate() throws Result {
+    	throw new NoCycleFound(id);
+	}
     
 }

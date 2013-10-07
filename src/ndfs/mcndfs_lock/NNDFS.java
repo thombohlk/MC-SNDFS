@@ -28,6 +28,8 @@ public class NNDFS extends MCNDFS {
 
         @Override
         protected void dfsRed(State s) throws Result, InterruptedException {
+        	super.dfsRed(s);
+        	
             boolean tRed;
             List<State> post;
 
@@ -94,6 +96,8 @@ public class NNDFS extends MCNDFS {
 
         @Override
         protected void dfsBlue(State s) throws Result, InterruptedException {
+        	super.dfsBlue(s);
+        	
             boolean tRed;
             boolean allRed = true;
             List<State> post;
@@ -148,6 +152,14 @@ public class NNDFS extends MCNDFS {
             }
 
             localColors.color(s, Color.BLUE);
+        }
+        
+        @Override
+        protected void terminate() throws Result {
+            synchronized(stateCount) {
+                stateCount.notifyAll();
+            }
+            super.terminate();
         }
 
     }

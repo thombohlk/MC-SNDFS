@@ -24,7 +24,6 @@ public class Analyser {
 	protected String nrOfThreadsArg;
 	protected String outputTypeArg;
 
-	protected int nrOfIterations;
 	protected String[] versionsToAnalyse;
 	protected File[] filesToAnalyse;
 	protected String[] threadNrToAnalyse;
@@ -41,14 +40,13 @@ public class Analyser {
 		this.outputTypeArg = outputType;
 	}
 
-	protected void makeComparison(int nrOfIterations)
+	protected void makeComparison()
 			throws FileNotFoundException, InstantiationException {
-		this.nrOfIterations = nrOfIterations;
 		processVersions();
 		processNrOfThreads();
 		processFiles();
 
-		startAnalysis(nrOfIterations);
+		startAnalysis();
 	}
 
 	private void processFiles() {
@@ -81,7 +79,7 @@ public class Analyser {
 		}
 	}
 
-	protected void startAnalysis(int nrOfIterations)
+	protected void startAnalysis()
 			throws FileNotFoundException, InstantiationException {
 		if (this.outputTypeArg.equals("csv_performance")) {
 			System.out.println("version;\tfile;\tnrOfThreads;\tresult;\tduration;\t");
@@ -90,28 +88,26 @@ public class Analyser {
 							+ GraphAnalyser.getCSVHeaders());
 		}
 
-		for (String version : this.versionsToAnalyse) {
-			for (File file : this.filesToAnalyse) {
+		for (File file : this.filesToAnalyse) {
+			for (String version : this.versionsToAnalyse) {
 				if (version.equals("seq")) {
-					analyseVersion(version, file, 1, nrOfIterations);
+					analyseVersion(version, file, 1);
 				} else {
 					for (String nrOfThreads : this.threadNrToAnalyse) {
-						analyseVersion(version, file, Integer.valueOf(nrOfThreads),
-								nrOfIterations);
+						analyseVersion(version, file, Integer.valueOf(nrOfThreads));
 					}
 				}
 				if (this.threadNrToAnalyse.length > 1)
 					System.out.println();
 			}
-			if (this.filesToAnalyse.length > 1)
+			if (this.versionsToAnalyse.length > 1)
 				System.out.println();
 		}
 	}
 
-	protected void analyseVersion(String version, File file, int nrOfThreads,
-			int nrOfIterations) throws FileNotFoundException,
-			InstantiationException {
-		AlgorithmResult[] results = new AlgorithmResult[nrOfIterations];
+	protected void analyseVersion(String version, File file, int nrOfThreads)
+			throws FileNotFoundException, InstantiationException {
+		AlgorithmResult[] results = new AlgorithmResult[Global.ANALYSIS_ITERATIONS];
 
 		if (this.outputTypeArg.matches("user|user_performance"))
 			System.out.println("Analysing " + version + " with " + nrOfThreads
@@ -119,7 +115,7 @@ public class Analyser {
 		if (version.equals("seq"))
 			nrOfThreads = 1;
 
-		for (int i = 0; i < nrOfIterations; i++) {
+		for (int i = 0; i < Global.ANALYSIS_ITERATIONS; i++) {
 			if (this.outputTypeArg.matches("user|user_performance"))
 				System.out.println("Iteration " + (i + 1) + "...");
 			Global.SEED = Global.SEED_ARRAY[i % Global.SEED_ARRAY.length];

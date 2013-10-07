@@ -41,6 +41,8 @@ public class NNDFS extends MCNDFS {
         
         @Override
         protected void dfsRed(State s) throws Result, InterruptedException {
+        	super.dfsRed(s);
+        	
         	synchronized (stateVisited) {
         		int value = stateVisited.get(s);
 				stateVisited.put(s, value + 1);
@@ -93,6 +95,8 @@ public class NNDFS extends MCNDFS {
 
         @Override
         protected void dfsBlue(State s) throws Result, InterruptedException {
+        	super.dfsBlue(s);
+        	
         	synchronized (stateVisited) {
         		int value = stateVisited.get(s);
 				stateVisited.put(s, value + 1);
@@ -160,6 +164,14 @@ public class NNDFS extends MCNDFS {
         	}
             
             return leastVisited;
+        }
+        
+        @Override
+        protected void terminate() throws Result {
+        	synchronized(stateCount) {
+                stateCount.notifyAll();
+            }
+        	super.terminate();
         }
 
     }
