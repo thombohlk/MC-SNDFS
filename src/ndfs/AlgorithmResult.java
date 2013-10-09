@@ -1,6 +1,8 @@
 package ndfs;
 
-import helperClasses.logger.Logger;
+import helperClasses.logger.GraphAnalysisDataObject;
+
+import java.io.File;
 
 public class AlgorithmResult extends Result implements Comparable<AlgorithmResult> {
 
@@ -11,6 +13,8 @@ public class AlgorithmResult extends Result implements Comparable<AlgorithmResul
 	private long duration;
 	private Result result;
 	private String version;
+	private File file;
+	private int nrOfThreads;
 	
 	public AlgorithmResult(Result result, long duration, String version) {
 		super(result.getMessage());
@@ -18,6 +22,21 @@ public class AlgorithmResult extends Result implements Comparable<AlgorithmResul
 		this.duration = duration;
 		this.result = result;
 		this.version = version;
+	}
+	
+	public void printUserFriendly() {
+		System.out.println(this.version + " took " + this.duration + "ms");
+		System.out.println(this.result.getMessage());
+	}
+
+	@Override
+	public int compareTo(AlgorithmResult o) {
+		return (int) (this.duration - ((AlgorithmResult) o).duration);
+	}
+
+	@Override
+	public GraphAnalysisDataObject getAnalysisData() {
+		return (this.analysisData == null ? this.result.getAnalysisData() : this.analysisData);
 	}
 	
 	public long getDuration() {
@@ -36,23 +55,24 @@ public class AlgorithmResult extends Result implements Comparable<AlgorithmResul
 		return this.version;
 	}
 
-	@Override
-	public int compareTo(AlgorithmResult o) {
-		// TODO Auto-generated method stub
-		return (int) (this.duration - ((AlgorithmResult) o).duration);
+	public File getFile() {
+		return file;
 	}
 
-	@Override
-	public Logger getLogger() {
-		return (this.logger == null ? this.result.getLogger() : this.logger);
+	public void setFile(File file) {
+		this.file = file;
 	}
-	
-	public void printUserFriendly() {
-		System.out.println(this.version + " took " + this.duration + "ms");
-		System.out.println(this.result.getMessage());
-		if (super.logger != null) {
-//			super.logger.printUserFriendly();
-		}
+
+	public int getNrOfThreads() {
+		return nrOfThreads;
+	}
+
+	public void setNrOfThreads(int nrOfThreads) {
+		this.nrOfThreads = nrOfThreads;
+	}
+
+	public String getFileName() {
+		return this.file.getName();
 	}
 
 }

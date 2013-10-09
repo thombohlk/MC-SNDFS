@@ -8,7 +8,7 @@ import graph.State;
 import graph.Graph;
 import helperClasses.Color;
 import helperClasses.Colors;
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
 import ndfs.NDFS;
 import ndfs.Result;
 import ndfs.CycleFound;
@@ -22,7 +22,7 @@ public class NNDFS implements NDFS {
 
     protected Graph graph;
     protected Colors colors; 
-    protected Logger logger;
+    protected AlgorithmLogger logger;
 
 
 
@@ -43,7 +43,8 @@ public class NNDFS implements NDFS {
         for (State t : graph.post(s)) {
             if (colors.hasColor(t, Color.CYAN)) {
             	Result result = new CycleFound();
-            	result.setLogger(logger);
+            	if (logger != null)
+            		result.setAnalysisData(logger.getAnalysisData());
                 throw result;
             }
             else if (colors.hasColor(t, Color.BLUE)) {
@@ -75,7 +76,8 @@ public class NNDFS implements NDFS {
         dfsBlue(s);
 
     	Result result = new NoCycleFound();
-    	result.setLogger(logger);
+    	if (logger != null)
+    		result.setAnalysisData(logger.getAnalysisData());
         throw result;
     }
 

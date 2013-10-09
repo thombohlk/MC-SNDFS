@@ -1,6 +1,7 @@
 package ndfs;
 
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
+import helperClasses.logger.GraphAnalysisDataObject;
 
 
 
@@ -9,7 +10,7 @@ public class Result extends Throwable {
 
 
     private static final long serialVersionUID = 1L;
-    protected Logger logger;
+    protected GraphAnalysisDataObject analysisData;
 
 
 
@@ -26,11 +27,12 @@ public class Result extends Throwable {
 		return a.getName().equals(b.getName());
     }
 
-	public void setLogger(Logger logger) {
-		this.logger = logger;
+	public void setAnalysisData(GraphAnalysisDataObject analysisData) {
+		this.analysisData = analysisData;
 	}
 
-	public Logger getLogger() {
-		return this.logger;
+	public GraphAnalysisDataObject getAnalysisData() {
+		return this.analysisData;
 	}
+	
 }

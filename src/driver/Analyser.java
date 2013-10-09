@@ -1,8 +1,9 @@
 package driver;
 
 import helperClasses.Global;
+import helperClasses.StringArray;
 import helperClasses.logger.GraphAnalyser;
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,39 +15,40 @@ import ndfs.Result;
 
 public class Analyser {
 
-	public static String[] availableVersions = new String[] { "seq", "naive",
-			"extended", "lock", "nosync", "optimalPermutation2", "optimalPermutation3" };
-	public static String[] nrOfThreadsOptions = new String[] { "1", "2", "4",
-			"8", "16", "32" };
+	final public static String MODE_CSV = "csv";
+	final public static String MODE_CSVP = "csv_performance";
+	final public static String MODE_USER = "user";
+	final public static String MODE_USERP = "user_performance";
+	final public static String MODE_HEARTBEAT = "heartbeat";
+
+	final public static String[] MODES = new String[] { MODE_CSV, MODE_CSVP, MODE_USER, MODE_USERP, MODE_HEARTBEAT };
+	final public static String[] USER_MODES = new String[] { MODE_USER, MODE_USERP };
+	final public static String[] PERFORMANCE_MODES = new String[] { MODE_USERP, MODE_CSVP };
+	
+	public static final int ANALYSIS_ITERATIONS = 5;
 
 	protected String fileArg;
 	protected String versionArg;
 	protected String nrOfThreadsArg;
-	protected String outputTypeArg;
 
 	protected String[] versionsToAnalyse;
 	protected File[] filesToAnalyse;
-	protected String[] threadNrToAnalyse;
+	protected String[] threadNrsToAnalyse;
 
-	public Analyser() {
-
-	}
-
-	public void init(String fileArg, String version, String nrOfThreads,
-			String outputType) {
+	public Analyser(String fileArg, String version, String nrOfThreads) {
 		this.fileArg = fileArg;
 		this.versionArg = version;
 		this.nrOfThreadsArg = nrOfThreads;
-		this.outputTypeArg = outputType;
+
 	}
 
-	protected void makeComparison()
+	protected void executeAnalysis()
 			throws FileNotFoundException, InstantiationException {
 		processVersions();
 		processNrOfThreads();
 		processFiles();
 
-		startAnalysis();
+		executeCombinations();
 	}
 
 	private void processFiles() {
@@ -65,7 +67,7 @@ public class Analyser {
 
 	protected void processVersions() {
 		if (this.versionArg.equals("all")) {
-			this.versionsToAnalyse = availableVersions;
+			this.versionsToAnalyse = Executor.availableVersions;
 		} else {
 			this.versionsToAnalyse = versionArg.split("\\|");
 		}
@@ -73,31 +75,33 @@ public class Analyser {
 
 	protected void processNrOfThreads() {
 		if (this.nrOfThreadsArg.equals("all")) {
-			this.threadNrToAnalyse = nrOfThreadsOptions;
+			this.threadNrsToAnalyse = Executor.nrOfThreadsOptions;
 		} else {
-			this.threadNrToAnalyse = nrOfThreadsArg.split("\\|");
+			this.threadNrsToAnalyse = nrOfThreadsArg.split("\\|");
 		}
 	}
 
-	protected void startAnalysis()
+	protected void executeCombinations()
 			throws FileNotFoundException, InstantiationException {
-		if (this.outputTypeArg.equals("csv_performance")) {
-			System.out.println("version;\tfile;\tnrOfThreads;\tresult;\tduration;\t");
-		} else if (this.outputTypeArg.equals("csv")) {
-			System.out.println("version;\tfile;\tnrOfThreads;\tresult;\tduration;\t"
-							+ GraphAnalyser.getCSVHeaders());
+		// print headers
+		if (Global.MODE.equals(MODE_CSVP)) {
+			System.out.println(StringArray.implodeArray(Global.CSV_HEADERS, Global.CSV_DELIMITER));
+		} else if (Global.MODE.equals(MODE_CSV)) {
+			System.out.println(StringArray.implodeArray(Global.CSV_HEADERS, Global.CSV_DELIMITER)
+							+ GraphAnalyser.getAnalysisCSVHeaders());
 		}
 
+		// perform run for each combination of parameter
 		for (File file : this.filesToAnalyse) {
 			for (String version : this.versionsToAnalyse) {
-				if (version.equals("seq")) {
-					analyseVersion(version, file, 1);
+				if (version.equals(Executor.MODE_SEQ)) {
+					executeCombination(version, file, 1);
 				} else {
-					for (String nrOfThreads : this.threadNrToAnalyse) {
-						analyseVersion(version, file, Integer.valueOf(nrOfThreads));
+					for (String nrOfThreads : this.threadNrsToAnalyse) {
+						executeCombination(version, file, Integer.valueOf(nrOfThreads));
 					}
 				}
-				if (this.threadNrToAnalyse.length > 1)
+				if (this.threadNrsToAnalyse.length > 1)
 					System.out.println();
 			}
 			if (this.versionsToAnalyse.length > 1)
@@ -105,49 +109,78 @@ public class Analyser {
 		}
 	}
 
-	protected void analyseVersion(String version, File file, int nrOfThreads)
+	private void executeCombination(String version, File file, int nrOfThreads)
 			throws FileNotFoundException, InstantiationException {
-		AlgorithmResult[] results = new AlgorithmResult[Global.ANALYSIS_ITERATIONS];
-
-		if (this.outputTypeArg.matches("user|user_performance"))
-			System.out.println("Analysing " + version + " with " + nrOfThreads
-					+ " threads on " + file.getName() + ".");
-		if (version.equals("seq"))
-			nrOfThreads = 1;
-
-		for (int i = 0; i < Global.ANALYSIS_ITERATIONS; i++) {
-			if (this.outputTypeArg.matches("user|user_performance"))
-				System.out.println("Iteration " + (i + 1) + "...");
-			Global.SEED = Global.SEED_ARRAY[i % Global.SEED_ARRAY.length];
-			
-			try {
-				Executor.run(version, file, nrOfThreads, "none");
-			} catch (AlgorithmResult result) {
-				results[i] = result;
-			}
-			
-			if (! this.outputTypeArg.matches("csv_performance|user_performance")) {
-				try {
-					Executor.run(version, file, nrOfThreads, "log");
-				} catch (AlgorithmResult result) {
-					result.setDuration(results[i].getDuration());
-					results[i] = result;
-				}
-			}
+		if (Global.MODE.equals(MODE_HEARTBEAT)) {
+			AlgorithmResult result = executeRun(0, version, file, nrOfThreads);
+			result.setFile(file);
+			result.setNrOfThreads(nrOfThreads);
+			printAlgorithmResult(result);
+		} else {
+			executeAnalysisRun(version, file, nrOfThreads);
 		}
-
-		long averageDuration = calculateAverageDuration(results);
-		Result result = checkResultMessages(results);
-		AlgorithmResult averageResult = new AlgorithmResult(result,
-				averageDuration, version);
-
-		if (! this.outputTypeArg.matches("csv_performance|user_performance"))
-			averageResult.setLogger(Logger.calculateAverageLogger(results));
-
-		printAlgorithmResult(version, file, nrOfThreads, averageResult);
 	}
 
-	private Result checkResultMessages(AlgorithmResult[] results) {
+	protected void executeAnalysisRun(String version, File file, int nrOfThreads)
+			throws FileNotFoundException, InstantiationException {
+		AlgorithmResult[] results = new AlgorithmResult[ANALYSIS_ITERATIONS];
+		AlgorithmResult result;
+
+		if (Global.MODE.matches(StringArray.implodeArray(USER_MODES, "|")))
+			System.out.println("Analysing " + version + " with " + nrOfThreads + " threads on " + file.getName() + ".");
+
+		for (int i = 0; i < ANALYSIS_ITERATIONS; i++) {
+			results[i] = executeRun(i, version, file, nrOfThreads);
+		}
+		
+		result = constructAverageResult(results, version);
+		result.setFile(file);
+		result.setNrOfThreads(nrOfThreads);
+		printAlgorithmResult(result);
+	}
+
+	private AlgorithmResult executeRun(int iteration, String version,
+			File file, int nrOfThreads) throws FileNotFoundException,
+			InstantiationException {
+		AlgorithmResult result = null;
+		
+		// output progress and set global seed to new value
+		if (Global.MODE.matches(StringArray.implodeArray(USER_MODES, "|")))
+			System.out.println("Iteration " + (iteration + 1) + "...");
+		Global.SEED = Global.SEED_ARRAY[iteration % Global.SEED_ARRAY.length];
+		
+		// perform a normal run. a log run is executed if needed after which the results are combined
+		try {
+			Executor.run(version, file, nrOfThreads, "none");
+		} catch (AlgorithmResult r) {
+			result = r;
+		}
+		if (! Global.MODE.matches(StringArray.implodeArray(PERFORMANCE_MODES, "|"))) {
+			try {
+				Executor.run(version, file, nrOfThreads, "log");
+			} catch (AlgorithmResult r) {
+				r.setDuration(result.getDuration());
+				result = r;
+			}
+		}
+		
+		return result;
+	}
+
+	private AlgorithmResult constructAverageResult(AlgorithmResult[] results, String version) {
+		AlgorithmResult averageResult;
+		Result result = chechAndConstructResultMessage(results);
+		long averageDuration = calculateAverageDuration(results);
+		
+		averageResult = new AlgorithmResult(result, averageDuration, version);
+
+		if (! Global.MODE.matches(StringArray.implodeArray(PERFORMANCE_MODES, "|")))
+			averageResult.setAnalysisData(GraphAnalyser.constructAverageDataObject(results));
+		
+		return averageResult;
+	}
+
+	private Result chechAndConstructResultMessage(AlgorithmResult[] results) {
 		for (int i = 0; i < results.length; i++) {
 			if (!results[i].getResult().isEqualTo(results[0].getResult())) {
 				return new Result("not all outputs are the same!");
@@ -156,9 +189,15 @@ public class Analyser {
 		return results[0].getResult();
 	}
 
-	private static long calculateAverageDuration(AlgorithmResult[] results) {
-		// average duration
+	/**
+	 * Calculates average duration for multiple results.
+	 * 
+	 * @param results
+	 * @return
+	 */
+	private long calculateAverageDuration(AlgorithmResult[] results) {
 		long total = 0;
+		
 		for (int i = 0; i < results.length; i++) {
 			total = total + results[i].getDuration();
 		}
@@ -167,40 +206,47 @@ public class Analyser {
 		return average;
 	}
 
-	private void printAlgorithmResult(String version, File file,
-			int nrOfThreads, AlgorithmResult result) {
-		switch (this.outputTypeArg) {
-		case "user":
-		case "user_performance":
+	private void printAlgorithmResult(AlgorithmResult result) {
+		switch (Global.MODE) {
+		case MODE_USER:
+		case MODE_USERP:
 			printAlgorithmResultUser(result);
 			break;
-		case "csv":
-		case "csv_performance":
-			printAlgorithmResultCSV(version, file, nrOfThreads, result);
+		case MODE_HEARTBEAT:
+			printAlgorithmResultCSV(result);
+			printAlgorithmResultHeartBeat(result);
 			break;
-
+		case MODE_CSV:
+		case MODE_CSVP:
 		default:
+			printAlgorithmResultCSV(result);
 			break;
 		}
 	}
 
-	private void printAlgorithmResultCSV(String version, File file,
-			int nrOfThreads, AlgorithmResult result) {
-		System.out.print(version + ";\t" + file.getName() + ";\t" + nrOfThreads
-				+ ";\t" + result.getMessage() + ";\t" + result.getDuration()
-				+ ";\t");
-		if (!this.outputTypeArg.equals("csv_performance"))
-			System.out.print(result.getLogger().getResultsCSV());
-		System.out.println();
+	private void printAlgorithmResultCSV(AlgorithmResult result) {
+		
+		String delimiter = Global.CSV_DELIMITER;
+		System.out.print(
+				result.getVersion() + delimiter + 
+				result.getFileName() + delimiter + 
+				result.getNrOfThreads() + delimiter + 
+				result.getMessage() + delimiter + 
+				result.getDuration() + delimiter +
+				(! Global.MODE.equals(MODE_CSVP) ? result.getAnalysisData().getResultsCSV() : "" ) +
+				"\n");
 	}
 
 	private void printAlgorithmResultUser(AlgorithmResult result) {
 		System.out.println(result.getVersion() + " took "
 				+ result.getDuration() + "ms with: " + result.getMessage()
 				+ ".");
-		if (!this.outputTypeArg.equals("user_performance"))
-			System.out.print(result.getLogger().getResultsUser());
-		System.out.println();
+		if (! Global.MODE.equals(MODE_USERP))
+			System.out.print(result.getAnalysisData().getResultsUser() + "\n");
+	}
+
+	private void printAlgorithmResultHeartBeat(AlgorithmResult result) {
+		result.getAnalysisData().printHeartBeats();
 	}
 
 

@@ -3,7 +3,7 @@ package mcndfs;
 import graph.State;
 import helperClasses.BooleanHashMap;
 import helperClasses.IntegerHashMap;
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	protected BooleanHashMap<State> stateRed;
 	protected IntegerHashMap<State> stateCount;
 	protected ArrayList<GeneralBird> swarm;
-	protected Logger logger;
+	protected AlgorithmLogger logger;
 	protected ExecutorService executorService;
 
 	public MCNDFS(File file) {
@@ -37,7 +37,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
     protected void nndfs() throws Result {
         boolean foundCycle = false;
         int foundBy = 0;
-        Result r;
+        Result result;
 
         executorService = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(executorService);
@@ -50,11 +50,11 @@ public abstract class MCNDFS implements MCNDFSInterface {
         // Wait for the first thread to return. If an exception is thrown the 
         // completion service is shut down and a CycleFound will be thrown.
         try {
-			int result = cs.take().get();
-			if (result > 0) {
-				foundBy = result;
+			int id = cs.take().get();
+			if (id > 0) {
+				foundBy = id;
 			} else {
-				foundBy = -result;
+				foundBy = -id;
 				foundCycle = true;
 			}
 		} catch (InterruptedException | ExecutionException e) {
@@ -63,12 +63,13 @@ public abstract class MCNDFS implements MCNDFSInterface {
         executorService.shutdownNow();
 
         if (foundCycle) {
-            r = new CycleFound(foundBy);
+            result = new CycleFound(foundBy);
         } else {
-            r = new NoCycleFound();
+            result = new NoCycleFound();
         }
-        r.setLogger(logger);
-        throw r;
+        if (logger != null)
+        	result.setAnalysisData(logger.getAnalysisData());
+        throw result;
         
     }
 

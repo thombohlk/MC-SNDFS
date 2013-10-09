@@ -1,4 +1,4 @@
-package ndfs.mcndfs_nosync;
+package mcndfs.nosync;
 
 import java.io.File;
 import java.io.FileNotFoundException;

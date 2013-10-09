@@ -1,4 +1,4 @@
-package ndfs.mcndfs_nosync;
+package mcndfs.nosync;
 
 import java.util.HashMap;
 import java.util.Hashtable;

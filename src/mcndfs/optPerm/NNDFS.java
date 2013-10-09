@@ -1,4 +1,4 @@
-package ndfs.mcndfs_optimalPermutation;
+package mcndfs.optPerm;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,7 +31,8 @@ import ndfs.NoCycleFound;
 
 public class NNDFS extends MCNDFS {
 
-    volatile private Map<State, Integer> stateVisited;
+    volatile private Map<State, Integer> stateVisitedBlue;
+    volatile private Map<State, Integer> stateVisitedRed;
 
     class Bird extends GeneralBird {
 
@@ -43,9 +44,9 @@ public class NNDFS extends MCNDFS {
         protected void dfsRed(State s) throws Result, InterruptedException {
         	super.dfsRed(s);
         	
-        	synchronized (stateVisited) {
-        		int value = stateVisited.get(s);
-				stateVisited.put(s, value + 1);
+        	synchronized (stateVisitedRed) {
+        		int value = stateVisitedRed.get(s);
+				stateVisitedRed.put(s, value + 1);
 			}
         	
             boolean tRed;
@@ -57,7 +58,7 @@ public class NNDFS extends MCNDFS {
             	if (s.equals(graph.getInitialState()) && id == 0) {
             		System.out.println("red: " + post.size());
             	}
-            	State t = getLeastVisited(post);
+            	State t = getLeastVisited(post, stateVisitedRed);
             	
                 if (localColors.hasColor(t, Color.CYAN)) {
             		System.out.println("better late than never");
@@ -97,9 +98,9 @@ public class NNDFS extends MCNDFS {
         protected void dfsBlue(State s) throws Result, InterruptedException {
         	super.dfsBlue(s);
         	
-        	synchronized (stateVisited) {
-        		int value = stateVisited.get(s);
-				stateVisited.put(s, value + 1);
+        	synchronized (stateVisitedBlue) {
+        		int value = stateVisitedBlue.get(s);
+				stateVisitedBlue.put(s, value + 1);
 			}
         	
             boolean tRed;
@@ -109,7 +110,7 @@ public class NNDFS extends MCNDFS {
 
             List<State> post = graph.post(s);
             while (! post.isEmpty()) {
-            	State t = getLeastVisited(post);
+            	State t = getLeastVisited(post, stateVisitedBlue);
             	
             	// early cycle detection
             	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
@@ -148,7 +149,7 @@ public class NNDFS extends MCNDFS {
             localColors.color(s, Color.BLUE);
         }
         
-        private State getLeastVisited(List<State> post) {
+        private State getLeastVisited(List<State> post, Map<State, Integer> stateVisited) {
         	int leastVisitedNr = Integer.MAX_VALUE;
         	int visited;
         	State leastVisited = post.get(0);
@@ -179,7 +180,8 @@ public class NNDFS extends MCNDFS {
 
     public NNDFS(File file) {
     	super(file);
-    	this.stateVisited = new IntegerHashMap<State>(new Integer(0));
+    	this.stateVisitedBlue = new IntegerHashMap<State>(new Integer(0));
+    	this.stateVisitedRed = new IntegerHashMap<State>(new Integer(0));
     }
 
     @Override

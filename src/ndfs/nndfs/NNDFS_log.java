@@ -4,7 +4,7 @@ package ndfs.nndfs;
 import graph.Graph;
 import graph.State;
 import helperClasses.Color;
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
 
 import java.util.Map;
 
@@ -17,7 +17,7 @@ public class NNDFS_log extends NNDFS {
 
     public NNDFS_log(Graph graph, Map<State, Color> colorStore) {
     	super(graph, colorStore);
-    	logger = new Logger(graph);
+    	logger = new AlgorithmLogger(graph);
     }
 
 

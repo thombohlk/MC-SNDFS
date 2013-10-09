@@ -1,12 +1,10 @@
 package driver;
 
-import graph.State;
-import helperClasses.Color;
+import helperClasses.Global;
+import helperClasses.StringArray;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
 
 import ndfs.AlgorithmResult;
 
@@ -27,47 +25,37 @@ public class Main {
 		System.out.println("    <version> is one of {seq}");
 	}
 
-	private static void dispatch(File file, String version, int nrOfThreads) throws ArgumentException, FileNotFoundException,
+	private static void dispatch(File file, String version, int nrOfThreads)
+			throws ArgumentException, FileNotFoundException,
 			InstantiationException {
 
-		// TODO: remove mode from this functions
-		String mode = "none";
 		try {
 			if (version.equals("seq")) {
 				if (nrOfThreads != 1) {
 					throw new ArgumentException(
 							"seq can only run with 1 worker");
 				}
-				Executor.runNDFS("seq", file, mode);
-			} else if (version
-					.matches("naive|extended|optimalPermutation|optimalPermutation2|optimalPermutation3|lock|nosync")) {
-				Executor.runMCNDFS(version, file, nrOfThreads, mode);
+				Executor.runNDFS("seq", file, "none");
+			} else if (version.matches(StringArray.implodeArray(
+					Executor.availableVersions, "|"))) {
+				Executor.runMCNDFS(version, file, nrOfThreads, "none");
 			} else {
-				throw new ArgumentException("Unkown version: " + version + (mode.equals("log") ? "_log" : "?"));
+				throw new ArgumentException("Unkown version: " + version);
 			}
 		} catch (AlgorithmResult r) {
-			if (mode.equals("none")) {
-				// default output
-				System.out.println(r.getMessage());
-				System.out.printf("%s took %d ms\n", r.getVersion(),
-						r.getDuration());
-			} else if (mode.equals("performance")) {
-				// print performance
-				System.out.println(r.getDuration());
-			} else {
-				// print logs
-				System.out.print(r.getLogger().getResultsCSV());
-			}
+			// default output
+			System.out.println(r.getMessage());
+			System.out.printf("%s took %d ms\n", r.getVersion(),
+					r.getDuration());
 		}
 
 	}
-	
-	private static void dispatchAnalysis(String fileArg, String versionArg, String nrOfThreadsArg,
-			String mode) throws ArgumentException, FileNotFoundException,
-			InstantiationException {
-		Analyser analyser = new Analyser();
-		analyser.init(fileArg, versionArg, nrOfThreadsArg, mode);
-		analyser.makeComparison();
+
+	private static void dispatchAnalysis(String fileArg, String versionArg,
+			String nrOfThreadsArg) throws ArgumentException,
+			FileNotFoundException, InstantiationException {
+		Analyser analyser = new Analyser(fileArg, versionArg, nrOfThreadsArg);
+		analyser.executeAnalysis();
 	}
 
 	public static void main(String[] argv) {
@@ -75,22 +63,24 @@ public class Main {
 			if (argv.length < 3 || argv.length > 4)
 				throw new ArgumentException("Wrong number of arguments");
 			if (argv.length == 4) {
-				if (argv[3].matches("csv|csv_performance|user|user_performance")) {
+				if (argv[3].matches(StringArray.implodeArray(Analyser.MODES,
+						"|"))) {
 					String fileArg = argv[0];
 					String versionArg = argv[1];
 					String nrOfThreadsArg = argv[2];
-					String mode = argv[3];
-					
-					dispatchAnalysis(fileArg, versionArg, nrOfThreadsArg, mode);
+					Global.MODE = argv[3];
+
+					dispatchAnalysis(fileArg, versionArg, nrOfThreadsArg);
 				} else {
-					throw new ArgumentException("The fourth argument should be either 'csv', 'csv_performance' or 'user'.");
+					throw new ArgumentException(
+							"The fourth argument should be either 'csv', 'csv_performance', 'user', 'user_performance' or 'heartbeat'.");
 				}
 			}
 			if (argv.length == 3) {
 				File file = new File(argv[0]);
 				String version = argv[1];
 				int nrOfThreads = new Integer(argv[2]);
-	
+
 				dispatch(file, version, nrOfThreads);
 			}
 		} catch (FileNotFoundException e) {

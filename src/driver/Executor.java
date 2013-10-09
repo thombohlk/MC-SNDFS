@@ -18,13 +18,27 @@ import ndfs.Result;
 
 public class Executor {
 
+	final public static String MODE_SEQ = "seq";
+	final public static String MODE_NAIVE = "naive";
+	final public static String MODE_EXTENDED = "extended";
+	final public static String MODE_LOCK = "lock";
+	final public static String MODE_NOSYNC = "nosync";
+	final public static String MODE_OPTPERM = "optPerm";
+	final public static String MODE_OPTPERM2 = "optPerm2";
+	final public static String MODE_OPTPERM3 = "optPerm3";
+
+	public static String[] availableVersions = new String[] { MODE_SEQ, MODE_NAIVE,
+		MODE_EXTENDED, MODE_LOCK, MODE_NOSYNC, MODE_OPTPERM, MODE_OPTPERM2, MODE_OPTPERM3 };
+	public static String[] nrOfThreadsOptions = new String[] { "1", "2", "4",
+		"8", "16", "32", "48" };
+
 	public Executor() {
 
 	}
 	
 	public static void run(String version, File file, int nrOfThreads,
 			String loggingMode) throws FileNotFoundException, InstantiationException, AlgorithmResult {
-		if (version.equals("seq")) {
+		if (version.equals(MODE_SEQ)) {
 			runNDFS(version, file, loggingMode);
 		} else {
 			runMCNDFS(version, file, nrOfThreads, loggingMode);

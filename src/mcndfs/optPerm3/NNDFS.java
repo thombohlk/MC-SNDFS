@@ -1,4 +1,4 @@
-package ndfs.mcndfs_optimalPermutation3;
+package mcndfs.optPerm3;
 
 import java.io.File;
 import java.io.FileNotFoundException;

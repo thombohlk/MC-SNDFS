@@ -2,19 +2,22 @@ package helperClasses.logger;
 
 import graph.Graph;
 import graph.State;
+import helperClasses.Global;
+import helperClasses.StringArray;
 
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ndfs.AlgorithmResult;
+
 
 
 public class GraphAnalyser {
-
-	public double totalNrOfStates = 0;
-	public int totalNrOfUnvisitedBlueStates = 0;
-	public int totalNrOfUnvisitedRedStates = 0;
-	public int totalNrOfBlueVisists = 0;
-	public int totalNrOfRedVisists = 0;
+	
+	public static final String[] ANALYSIS_CSV_HEADERS = new String[] {
+			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient" };
+	
+	private GraphAnalysisDataObject data;
 	
 	private HashSet<State> visitedStates;
 	private Graph graph;
@@ -22,17 +25,21 @@ public class GraphAnalyser {
     private ConcurrentHashMap<Integer, HashSet<State>> stateBlueVisits;
     private ConcurrentHashMap<Integer, HashSet<State>> stateRedVisits;
 	
-	public GraphAnalyser(Graph graph, ConcurrentHashMap<Integer, HashSet<State>> stateBlueVisits, ConcurrentHashMap<Integer, HashSet<State>> stateRedVisits) {
+    
+	public GraphAnalyser(GraphAnalysisDataObject data) {
+		this.data = data;
 		this.visitedStates = new HashSet<State>();
-		this.graph = graph;
-		this.stateBlueVisits = stateBlueVisits;
-		this.stateRedVisits = stateRedVisits;
+		this.graph = data.graph;
+		this.stateBlueVisits = data.stateBlueVisits;
+		this.stateRedVisits = data.stateRedVisits;
 	}
+	
 	
 	public void count() {
 		State s = graph.getInitialState();
 		processState(s);
 	}
+	
 	
 	private void processState(State s) {
 		if (visitedStates.contains(s)) {
@@ -40,7 +47,7 @@ public class GraphAnalyser {
 		}
 		visitedStates.add(s);
 		// count this state
-		totalNrOfStates++;
+		getData().nrOfStates++;
 		countState(s);
 		
 		// count states in post
@@ -49,61 +56,78 @@ public class GraphAnalyser {
 		}
 	}
 
+	
 	private void countState(State s) {
 		boolean visitedBlue = false;
 		boolean visitedRed = false;
 		
 		for (Integer i : stateBlueVisits.keySet()) {
 			if (stateBlueVisits.get(i).contains(s)) {
-				totalNrOfBlueVisists++;
+				getData().nrOfBlueVisists++;
 				visitedBlue = true;
 			}
 		}
 		if (! visitedBlue) {
-			totalNrOfUnvisitedBlueStates++;
+			getData().nrOfUnvisitedBlues++;
 		}
 		
 		for (Integer i : stateRedVisits.keySet()) {
 			if (stateRedVisits.get(i).contains(s)) {
-				totalNrOfRedVisists++;
+				getData().nrOfRedVisists++;
 				visitedRed = true;
 			}
 		}
 		if (! visitedRed) {
-			totalNrOfUnvisitedRedStates++;
+			getData().nrOfUnvisitedReds++;
 		}
 	}
 
+	
 	public void printResults() {
-		System.out.println(getResultsUser());
-	}
-
-	public String getResultsCSV() {
-		String result = "";
-		result += totalNrOfStates + ";\t";
-		result += totalNrOfBlueVisists + ";\t";
-		result += totalNrOfRedVisists + ";\t";
-		result += totalNrOfUnvisitedBlueStates + ";\t";
-		result += totalNrOfUnvisitedRedStates + ";\t";
-		result += (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + ";\t";
-		result += (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates));
-		return result;
+		System.out.println(data.getResultsUser());
 	}
 	
-	public static String getCSVHeaders() {
-		String result = "#states;\t#blueVisits;\t#redVisits;\t#unvisitedBlueStates;\t#unvisitedRedStates;\tblueOverlapCoefficient;\tredOverlapCoefficient";
+	
+	public static String getAnalysisCSVHeaders() {
+		String result = StringArray.implodeArray(ANALYSIS_CSV_HEADERS, Global.CSV_DELIMITER);
 		return result;
 	}
 
-	public String getResultsUser() {
-		String result = "";
-		result += ("Total amount of states: " + totalNrOfStates + "\n");
-		result += ("Total number of blue visits: " + totalNrOfBlueVisists + "\n");
-		result += ("Total number of red visits: " + totalNrOfRedVisists + "\n");
-		result += ("Total number of unvisited blue states: " + totalNrOfUnvisitedBlueStates + "\n");
-		result += ("Total number of unvisited red states: " + totalNrOfUnvisitedRedStates + "\n");
-		result += ("Blue overlap coefficient: " + (totalNrOfBlueVisists / (totalNrOfStates - totalNrOfUnvisitedBlueStates)) + "\n");
-		result += ("Red overlap coefficient: " + (totalNrOfRedVisists / (totalNrOfStates - totalNrOfUnvisitedRedStates)) + "\n");
+	
+	public GraphAnalysisDataObject getData() {
+		return data;
+	}
+
+	
+	public void setData(GraphAnalysisDataObject data) {
+		this.data = data;
+	}
+
+
+	public static GraphAnalysisDataObject constructAverageDataObject(AlgorithmResult[] results) {
+		GraphAnalysisDataObject data = new GraphAnalysisDataObject();
+		GraphAnalysisDataObject result = new GraphAnalysisDataObject();
+		int nrOfResults = results.length;
+
+		int totalNrOfUnvisitedBlueStates = 0;
+		int totalNrOfUnvisitedRedStates = 0;
+		int totalNrOfBlueVisists = 0;
+		int totalNrOfRedVisists = 0;
+		
+		for (int i = 0; i < results.length; i++) {
+			data = results[i].getAnalysisData();
+			totalNrOfUnvisitedBlueStates += data.nrOfUnvisitedBlues;
+			totalNrOfUnvisitedRedStates += data.nrOfUnvisitedReds;
+			totalNrOfBlueVisists += data.nrOfBlueVisists;
+			totalNrOfRedVisists += data.nrOfRedVisists;
+		}
+		
+		result.nrOfStates = (int) results[0].getAnalysisData().nrOfStates;
+		result.nrOfUnvisitedBlues = totalNrOfUnvisitedBlueStates / nrOfResults;
+		result.nrOfUnvisitedReds = totalNrOfUnvisitedRedStates / nrOfResults;
+		result.nrOfBlueVisists = totalNrOfBlueVisists / nrOfResults;
+		result.nrOfRedVisists = totalNrOfRedVisists / nrOfResults;
+		
 		return result;
 	}
 	

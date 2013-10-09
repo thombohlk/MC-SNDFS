@@ -1,4 +1,4 @@
-package helperClasses.logger;
+package helperClasses;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;

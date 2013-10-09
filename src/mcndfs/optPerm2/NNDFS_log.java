@@ -1,7 +1,7 @@
-package ndfs.mcndfs_optimalPermutation2;
+package mcndfs.optPerm2;
 
 import graph.State;
-import helperClasses.logger.Logger;
+import helperClasses.logger.AlgorithmLogger;
 
 import java.io.File;
 
@@ -34,7 +34,7 @@ public class NNDFS_log extends NNDFS {
 
     public NNDFS_log(File file) {
     	super(file);
-    	logger = new Logger(file);
+    	logger = new AlgorithmLogger(file);
     }
 
     @Override

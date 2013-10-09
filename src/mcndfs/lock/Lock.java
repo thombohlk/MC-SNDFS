@@ -1,4 +1,4 @@
-package ndfs.mcndfs_lock;
+package mcndfs.lock;
 
 public class Lock{
   
