@@ -16,7 +16,8 @@ import ndfs.AlgorithmResult;
 public class GraphAnalyser {
 	
 	public static final String[] ANALYSIS_CSV_HEADERS = new String[] {
-			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", "ave blue visits", "ave red states", "std blue visits", "std red visits" };
+//			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", 
+		"ave blue visits", "ave red states", "std blue visits", "std red visits", "average waiting time", "waiting time std"};
 	
 	private GraphAnalysisDataObject data;
 	
@@ -108,6 +109,7 @@ public class GraphAnalyser {
 	public void analyseAverage() {
 		analyseAverageBlue();
 		analyseAverageRed();
+		analyseWaitingTime();
 	}
 
 
@@ -141,6 +143,21 @@ public class GraphAnalyser {
 	}
 
 
+	private void analyseWaitingTime() {
+		double[] results = new double[data.waitingTime.keySet().size()];
+		int j = 0;
+		
+		for (Long i : data.waitingTime.keySet()) {
+			results[j] = data.waitingTime.get(i).get();
+			j++;
+		}
+		
+		Statistics stats = new Statistics(results);
+		data.syncWaitingTime = stats.getMean();
+		data.waitingTimeStd = stats.getStdDev();
+	}
+
+
 	public static GraphAnalysisDataObject constructAverageDataObject(AlgorithmResult[] results) {
 		GraphAnalysisDataObject data = new GraphAnalysisDataObject();
 		GraphAnalysisDataObject result = new GraphAnalysisDataObject();
@@ -154,6 +171,8 @@ public class GraphAnalyser {
 		double totalAverageRedVisits= 0;
 		double totalBlueStdVar = 0;
 		double totalRedStdVar = 0;
+		double totalSyncWaitingTime = 0;
+		double totalWaitingTimeStd = 0;
 		
 		for (int i = 0; i < results.length; i++) {
 			data = results[i].getAnalysisData();
@@ -165,6 +184,8 @@ public class GraphAnalyser {
 			totalAverageRedVisits += data.aveNrOfRedNodes;
 			totalBlueStdVar += data.blueNodeStdDev;
 			totalRedStdVar += data.redNodeStdDev;
+			totalSyncWaitingTime += data.syncWaitingTime;
+			totalWaitingTimeStd += data.waitingTimeStd;
 		}
 		
 		result.nrOfStates = (int) results[0].getAnalysisData().nrOfStates;
@@ -176,6 +197,8 @@ public class GraphAnalyser {
 		result.aveNrOfRedNodes = totalAverageRedVisits / nrOfResults;
 		result.blueNodeStdDev = totalBlueStdVar / nrOfResults;
 		result.redNodeStdDev = totalRedStdVar / nrOfResults;
+		result.syncWaitingTime = totalSyncWaitingTime / nrOfResults;
+		result.waitingTimeStd = totalWaitingTimeStd / nrOfResults;
 		
 		return result;
 	}

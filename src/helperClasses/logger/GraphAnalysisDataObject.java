@@ -29,6 +29,7 @@ public class GraphAnalysisDataObject {
     public ConcurrentLongHashMap<Long> dfsRedStartCount;
     public ConcurrentLongHashMap<Long> dfsRedDoneCount;
     public ConcurrentLongHashMap<Long> waitCount;
+    public ConcurrentLongHashMap<Long> waitingTime;
 
     public AtomicLong dfsBlueCounter;
     public AtomicLong dfsBlueStartCounter;
@@ -42,6 +43,8 @@ public class GraphAnalysisDataObject {
     public double aveNrOfRedNodes;
     public double blueNodeStdDev;
     public double redNodeStdDev;
+    public double syncWaitingTime;
+	public double waitingTimeStd;
 
     
 	public GraphAnalysisDataObject() {}
@@ -63,6 +66,7 @@ public class GraphAnalysisDataObject {
     	dfsRedStartCount = new ConcurrentLongHashMap<Long>(-1);
     	dfsRedDoneCount = new ConcurrentLongHashMap<Long>(-1);
     	waitCount = new ConcurrentLongHashMap<Long>(-1);
+    	waitingTime = new ConcurrentLongHashMap<Long>(-1);
 
     	dfsBlueCounter = new AtomicLong(0);
     	dfsBlueStartCounter = new AtomicLong(0);
@@ -76,33 +80,37 @@ public class GraphAnalysisDataObject {
 	public String getResultsCSV() {
 		String delimiter = Global.CSV_DELIMITER;
 		String result = "";
-		result += nrOfStates + delimiter;
-		result += nrOfBlueVisists + delimiter;
-		result += nrOfRedVisists + delimiter;
-		result += nrOfUnvisitedBlues + delimiter;
-		result += nrOfUnvisitedReds + delimiter;
-		result += (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + delimiter;
-		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + delimiter; 
+//		result += nrOfStates + delimiter;
+//		result += nrOfBlueVisists + delimiter;
+//		result += nrOfRedVisists + delimiter;
+//		result += nrOfUnvisitedBlues + delimiter;
+//		result += nrOfUnvisitedReds + delimiter;
+//		result += (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + delimiter;
+//		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + delimiter; 
 		result += aveNrOfBlueNodes + delimiter; 
 		result += aveNrOfRedNodes + delimiter;
 		result += blueNodeStdDev + delimiter;
-		result += redNodeStdDev;
+		result += redNodeStdDev + delimiter; 
+		result += syncWaitingTime + delimiter; 
+		result += waitingTimeStd;
 		return result;
 	}
 
 	public String getResultsUser() {
-		String result = "";
-		result += ("Total amount of states: " + nrOfStates + "\n");
-		result += ("Total number of blue visits: " + nrOfBlueVisists + "\n");
-		result += ("Total number of red visits: " + nrOfRedVisists + "\n");
-		result += ("Total number of unvisited blue states: " + nrOfUnvisitedBlues + "\n");
-		result += ("Total number of unvisited red states: " + nrOfUnvisitedReds + "\n");
-		result += ("Blue overlap coefficient: " + (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + "\n");
-		result += ("Red overlap coefficient: " + (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + "\n");
+		String result = "\n";
+//		result += ("Total amount of states: " + nrOfStates + "\n");
+//		result += ("Total number of blue visits: " + nrOfBlueVisists + "\n");
+//		result += ("Total number of red visits: " + nrOfRedVisists + "\n");
+//		result += ("Total number of unvisited blue states: " + nrOfUnvisitedBlues + "\n");
+//		result += ("Total number of unvisited red states: " + nrOfUnvisitedReds + "\n");
+//		result += ("Blue overlap coefficient: " + (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + "\n");
+//		result += ("Red overlap coefficient: " + (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + "\n");
 		result += ("Blue visit average: " + aveNrOfBlueNodes + "\n");
 		result += ("Red visit average: " + aveNrOfRedNodes + "\n");
 		result += ("Blue visit std dev: " + blueNodeStdDev + "\n");
 		result += ("Red visit std dev: " + redNodeStdDev + "\n");
+		result += ("Average waiting time: " + syncWaitingTime + "\n");
+		result += ("Waiting time std: " + waitingTimeStd + "\n");
 		return result;
 	}
 

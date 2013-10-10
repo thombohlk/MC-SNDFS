@@ -14,6 +14,12 @@ public class NNDFS_log extends NNDFS {
         Bird(int id) {
         	super(id);
         }
+        
+        @Override
+        protected Integer shutDownAndReturn(boolean foundCycle) {
+        	logger.logWaitingTime(this.id, this.waitingTime);
+        	return super.shutDownAndReturn(foundCycle);
+        }
 
         @Override
 		protected void dfsRed(State s) throws Result, InterruptedException {
@@ -39,6 +45,7 @@ public class NNDFS_log extends NNDFS {
 
     @Override
     public void init(int nrOfThreads) {
+    	this.nrOfThreads = nrOfThreads;
     	for (int i = 1; i <= nrOfThreads; i++) {
     		super.swarm.add(new Bird(i));
     	}

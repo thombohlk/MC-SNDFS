@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicLong;
 
 import driver.Analyser;
 
@@ -67,7 +68,7 @@ public class AlgorithmLogger {
 	}
 
     public void parseData() {
-		graphAnalyser.analyseOverlap();
+//		graphAnalyser.analyseOverlap();
     	graphAnalyser.analyseAverage();
 	}
 
@@ -140,5 +141,10 @@ public class AlgorithmLogger {
 
 	public GraphAnalysisDataObject getAnalysisData() {
 		return graphAnalyser.getData();
+	}
+
+
+	public void logWaitingTime(long id, long waitingTime) {
+		data.waitingTime.put(id, new AtomicLong(waitingTime));
 	}
 }

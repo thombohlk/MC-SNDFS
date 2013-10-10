@@ -13,12 +13,15 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import ndfs.CycleFound;
 import ndfs.NoCycleFound;
 import ndfs.Result;
 
 public abstract class MCNDFS implements MCNDFSInterface {
+	
+	protected AtomicLong totalWaitingTime = new AtomicLong(0);
 
 	protected File file;
 	protected BooleanHashMap<State> stateRed;

@@ -18,6 +18,9 @@ import ndfs.NoCycleFound;
 import ndfs.Result;
 
 public abstract class GeneralBird implements Callable<Integer> {
+	
+	protected long waitingTime = 0;
+	protected long start;
 
 	protected int id;
 	protected Graph graph;
@@ -49,10 +52,18 @@ public abstract class GeneralBird implements Callable<Integer> {
         try {
             dfsBlue(initialState);
         } catch (Result e) {
-            return -(this.id);
+            return shutDownAndReturn(true);
         }
 
-        return this.id;
+        return shutDownAndReturn(false);
+    }
+    
+    protected Integer shutDownAndReturn(boolean foundCycle) {
+    	if (foundCycle) {
+    		return -(this.id);
+    	} else {
+    		return this.id;
+    	}
     }
     
     protected void dfsBlue(State s) throws Result, InterruptedException {

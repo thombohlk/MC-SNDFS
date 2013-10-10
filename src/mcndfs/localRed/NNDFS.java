@@ -51,7 +51,9 @@ public class NNDFS extends MCNDFS {
                     throw new CycleFound();
                 }
 
+                start = System.currentTimeMillis();
                 synchronized (stateRed) {
+                	waitingTime += System.currentTimeMillis() - start;
                 	tRed = stateRed.get(t);
 	            }
             	if (! localStatePink.get(t).booleanValue() && ! tRed) {
@@ -60,12 +62,16 @@ public class NNDFS extends MCNDFS {
             }
 
             if (s.isAccepting()) {
+                start = System.currentTimeMillis();
                 synchronized(stateCount) {
+                	waitingTime += System.currentTimeMillis() - start;
                     int count = stateCount.get(s).intValue();
                     stateCount.put(s, count - 1);
                 }
 
+                start = System.currentTimeMillis();
                 synchronized(stateCount) {
+                	waitingTime += System.currentTimeMillis() - start;
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
@@ -73,7 +79,9 @@ public class NNDFS extends MCNDFS {
                 }
             }
 
+            start = System.currentTimeMillis();
             synchronized (stateRed) {
+            	waitingTime += System.currentTimeMillis() - start;
                 stateRed.put(s, true);
             }
             localStateRed.put(s, true);
@@ -103,14 +111,18 @@ public class NNDFS extends MCNDFS {
             	}
             	
             	if (depth <= threads) {
+                    start = System.currentTimeMillis();
             		synchronized (stateRed) {
+                    	waitingTime += System.currentTimeMillis() - start;
 	                    tRed = stateRed.get(t);
 	                }
             	} else if (counter < (threads + (depth/threads))/3) {
             		tRed = localStateRed.get(t);
             		counter++;
             	} else {
+                    start = System.currentTimeMillis();
             		synchronized (stateRed) {
+                    	waitingTime += System.currentTimeMillis() - start;
 	                    tRed = stateRed.get(t);
 	                }
             		counter = 0;
@@ -122,14 +134,18 @@ public class NNDFS extends MCNDFS {
                 
                 // allred
                 if (depth <= threads/2) {
+                    start = System.currentTimeMillis();
 	                synchronized (stateRed) {
+                    	waitingTime += System.currentTimeMillis() - start;
 	                    tRed = stateRed.get(t);
 	                }
                 } else if (counter < (threads + (depth/threads))/3) {
                 	tRed = localStateRed.get(t);
                 	counter++;
             	} else {
+                    start = System.currentTimeMillis();
             		synchronized (stateRed) {
+                    	waitingTime += System.currentTimeMillis() - start;
 	                    tRed = stateRed.get(t);
 	                }
             		counter = 0;
@@ -140,12 +156,16 @@ public class NNDFS extends MCNDFS {
             }
 
             if (allRed) {
+                start = System.currentTimeMillis();
                 synchronized (stateRed) {
+                	waitingTime += System.currentTimeMillis() - start;
                     stateRed.put(s, true);
                 }
                 localStateRed.put(s, true);
             } else if (s.isAccepting()) {
+                start = System.currentTimeMillis();
                 synchronized (stateCount) {
+                	waitingTime += System.currentTimeMillis() - start;
                     int count = stateCount.get(s);
                     stateCount.put(s, count + 1);
                 }

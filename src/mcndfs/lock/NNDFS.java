@@ -43,7 +43,9 @@ public class NNDFS extends MCNDFS {
                     throw new CycleFound();
                 }
 
+                start = System.currentTimeMillis();
                 redLock.lock();
+            	waitingTime += System.currentTimeMillis() - start;
                 try {
                 	tRed = stateRed.get(t);
                 } finally {
@@ -56,7 +58,9 @@ public class NNDFS extends MCNDFS {
             }
 
             if (s.isAccepting()) {
+                start = System.currentTimeMillis();
                 countLock.lock();
+            	waitingTime += System.currentTimeMillis() - start;
                 try {
 	                int count = stateCount.get(s).intValue();
 	                stateCount.put(s, count - 1);
@@ -70,7 +74,9 @@ public class NNDFS extends MCNDFS {
                 }
             }
 
+            start = System.currentTimeMillis();
             redLock.lock();
+        	waitingTime += System.currentTimeMillis() - start;
             try {
             	stateRed.put(s, true);
             } finally {
@@ -99,7 +105,9 @@ public class NNDFS extends MCNDFS {
             		throw new CycleFound();
             	}
 
+                start = System.currentTimeMillis();
                 redLock.lock();
+            	waitingTime += System.currentTimeMillis() - start;
                 try {
                 	tRed = stateRed.get(t);
                 } finally {
@@ -111,22 +119,32 @@ public class NNDFS extends MCNDFS {
                 }
                 
                 // allred
+                start = System.currentTimeMillis();
                 redLock.lock();
-                if (! stateRed.get(t)) {
+            	waitingTime += System.currentTimeMillis() - start;
+                try {
+                	tRed = stateRed.get(t);
+                } finally {
+                	redLock.unlock();
+                }
+                if (! tRed) {
                 	allRed = false;
                 }
-                redLock.unlock();
             }
 
             if (allRed) {
+                start = System.currentTimeMillis();
                 redLock.lock();
+            	waitingTime += System.currentTimeMillis() - start;
                 try {
                     stateRed.put(s, true);
                 } finally {
                 	redLock.unlock();
                 }
             } else if (s.isAccepting()) {
+                start = System.currentTimeMillis();
             	countLock.lock();
+            	waitingTime += System.currentTimeMillis() - start;
             	try {
 	                int count = stateCount.get(s);
 	                stateCount.put(s, count + 1);

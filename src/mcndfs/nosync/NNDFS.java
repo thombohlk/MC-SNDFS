@@ -51,7 +51,9 @@ public class NNDFS extends MCNDFS {
             if (s.isAccepting()) {
                 stateCount.get(s).decrementAndGet();
 
+                start = System.currentTimeMillis();
                 synchronized(stateCount) {
+                	waitingTime += System.currentTimeMillis() - start;
 	                while (stateCount.get(s).intValue() > 0) {
 	                	stateCount.wait();
 	                }
