@@ -1,13 +1,9 @@
 package helperClasses;
 
 import java.util.HashMap;
-import java.util.Hashtable;
 
 public class IntegerHashMap<State> extends HashMap<State, Integer> {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	protected Integer defaultValue;
 	

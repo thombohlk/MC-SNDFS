@@ -1,15 +1,10 @@
 package mcndfs.nosync;
 
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurrentIntegerHashMap<State> extends ConcurrentHashMap<State, AtomicInteger> {
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	protected AtomicInteger defaultValue;
 	

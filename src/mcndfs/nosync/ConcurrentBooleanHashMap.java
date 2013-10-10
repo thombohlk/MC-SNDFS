@@ -1,11 +1,11 @@
 package mcndfs.nosync;
 
-import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ConcurrentBooleanHashMap<State> extends ConcurrentHashMap<State, AtomicBoolean> {
+	
+	private static final long serialVersionUID = 1L;
 	protected AtomicBoolean defaultValue;
 	
 	public ConcurrentBooleanHashMap(AtomicBoolean b) {

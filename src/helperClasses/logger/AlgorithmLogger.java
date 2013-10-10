@@ -3,22 +3,15 @@ package helperClasses.logger;
 import graph.Graph;
 import graph.GraphFactory;
 import graph.State;
-import helperClasses.ConcurrentLongHashMap;
 import helperClasses.Global;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import driver.Analyser;
-import ndfs.AlgorithmResult;
 
 public class AlgorithmLogger {
 	

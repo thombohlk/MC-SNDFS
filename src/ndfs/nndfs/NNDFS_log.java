@@ -8,8 +8,6 @@ import helperClasses.logger.AlgorithmLogger;
 
 import java.util.Map;
 
-import ndfs.CycleFound;
-import ndfs.NoCycleFound;
 import ndfs.Result;
 
 

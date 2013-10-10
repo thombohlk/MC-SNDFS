@@ -1,34 +1,16 @@
 package mcndfs.naive;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import graph.GraphFactory;
 import graph.State;
-import graph.Graph;
-import helperClasses.BooleanHashMap;
 import helperClasses.Color;
-import helperClasses.Colors;
-import helperClasses.IntegerHashMap;
-import helperClasses.Global;
+
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
+
 import mcndfs.GeneralBird;
 import mcndfs.MCNDFS;
-import ndfs.NDFS;
-import ndfs.Result;
 import ndfs.CycleFound;
-import ndfs.NoCycleFound;
+import ndfs.Result;
 
 public class NNDFS extends MCNDFS {
 

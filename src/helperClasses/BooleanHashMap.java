@@ -1,9 +1,10 @@
 package helperClasses;
 
 import java.util.HashMap;
-import java.util.Hashtable;
 
 public class BooleanHashMap<State> extends HashMap<State, Boolean> {
+	
+	private static final long serialVersionUID = 1L;
 	protected Boolean defaultValue;
 	
 	public BooleanHashMap(Boolean b) {

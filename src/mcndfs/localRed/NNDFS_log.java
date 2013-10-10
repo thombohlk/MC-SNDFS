@@ -6,7 +6,6 @@ import helperClasses.logger.AlgorithmLogger;
 import java.io.File;
 
 import ndfs.Result;
-import mcndfs.localRed.NNDFS.Bird;
 
 public class NNDFS_log extends NNDFS {
 
