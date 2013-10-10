@@ -26,9 +26,10 @@ public class Executor {
 	final public static String MODE_OPTPERM = "optPerm";
 	final public static String MODE_OPTPERM2 = "optPerm2";
 	final public static String MODE_OPTPERM3 = "optPerm3";
+	final public static String MODE_OPT4 = "opt4";
 
 	public static String[] availableVersions = new String[] { MODE_SEQ, MODE_NAIVE,
-		MODE_EXTENDED, MODE_LOCK, MODE_NOSYNC, MODE_OPTPERM, MODE_OPTPERM2, MODE_OPTPERM3 };
+		MODE_EXTENDED, MODE_LOCK, MODE_NOSYNC, MODE_OPTPERM, MODE_OPTPERM2, MODE_OPTPERM3, MODE_OPT4 };
 	public static String[] nrOfThreadsOptions = new String[] { "1", "2", "4",
 		"8", "16", "32", "48" };
 
