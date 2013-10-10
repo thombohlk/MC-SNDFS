@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -31,37 +30,27 @@ import ndfs.NoCycleFound;
 
 public class NNDFS extends MCNDFS {
 
-    volatile private Map<State, Integer> stateVisitedBlue;
-    volatile private Map<State, Integer> stateVisitedRed;
-
+    volatile private Map<State, Integer> permutationNr;
+    
     class Bird extends GeneralBird {
 
         Bird(int id) {
         	super(id, file);
         }
-        
+
         @Override
         protected void dfsRed(State s) throws Result, InterruptedException {
         	super.dfsRed(s);
         	
-        	synchronized (stateVisitedRed) {
-        		int value = stateVisitedRed.get(s);
-				stateVisitedRed.put(s, value + 1);
-			}
-        	
             boolean tRed;
+            List<State> post;
 
             localStatePink.put(s, true);
 
-            List<State> post = graph.post(s);
-            while (! post.isEmpty()) {
-            	if (s.equals(graph.getInitialState()) && id == 0) {
-            		System.out.println("red: " + post.size());
-            	}
-            	State t = getLeastVisited(post, stateVisitedRed);
-            	
+            post = getPermutation(s);
+
+            for (State t : post) {
                 if (localColors.hasColor(t, Color.CYAN)) {
-            		System.out.println("better late than never");
                     throw new CycleFound();
                 }
 
@@ -71,7 +60,6 @@ public class NNDFS extends MCNDFS {
                 if (! localStatePink.get(t).booleanValue() && ! tRed) {
                     dfsRed(t);
                 }
-            	post.remove(t);
             }
 
             if (s.isAccepting()) {
@@ -98,20 +86,15 @@ public class NNDFS extends MCNDFS {
         protected void dfsBlue(State s) throws Result, InterruptedException {
         	super.dfsBlue(s);
         	
-        	synchronized (stateVisitedBlue) {
-        		int value = stateVisitedBlue.get(s);
-				stateVisitedBlue.put(s, value + 1);
-			}
-        	
             boolean tRed;
             boolean allRed = true;
+            List<State> post;
 
             localColors.color(s, Color.CYAN);
 
-            List<State> post = graph.post(s);
-            while (! post.isEmpty()) {
-            	State t = getLeastVisited(post, stateVisitedBlue);
-            	
+            post = getPermutation(s);
+
+            for (State t : post) {
             	// early cycle detection
             	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
             		throw new CycleFound();
@@ -130,7 +113,6 @@ public class NNDFS extends MCNDFS {
                     	allRed = false;
                     }
                 }
-            	post.remove(t);
             }
 
             if (allRed) {
@@ -149,23 +131,48 @@ public class NNDFS extends MCNDFS {
             localColors.color(s, Color.BLUE);
         }
         
-        private State getLeastVisited(List<State> post, Map<State, Integer> stateVisited) {
-        	int leastVisitedNr = Integer.MAX_VALUE;
-        	int visited;
-        	State leastVisited = post.get(0);
-        	
-        	for (State t : post) {
-        		synchronized (stateVisited) {
-        			visited = stateVisited.get(t);
+        private List<State> getPermutation(State s) {
+			// Get post states
+			List<State> postStates = graph.post(s);
+			
+			// Determine amount of post states to permute
+			int nrOfSuccessors = postStates.size();
+			
+			// Permute for amount of post states > 1
+			if (nrOfSuccessors > 1) {
+				// Create array to store rotations for the different sub-parts
+				// Amount of rotations always 1 smaller than number of elements
+				// (rotating 1 element is sort of pointless)
+				int[] rotates = new int[(nrOfSuccessors-1)];
+				
+				// initialize local permutation id variable
+				int permNumber;
+				
+				// Acquire permutation id and increase by one (synchronized)
+				synchronized (permutationNr) {
+					permNumber = permutationNr.get(s);
+					permutationNr.put(s, permNumber + 1);
 				}
-        		if (visited < leastVisitedNr) {
-        			leastVisited = t;
-        			leastVisitedNr = visited;
-        		}
-        	}
-            
-            return leastVisited;
-        }
+				
+				// Calculate initial rotation (ergo on all elements)
+				// (to determine which state to visit first)
+				rotates[(rotates.length-1)] = permNumber % nrOfSuccessors;
+				
+				// Determine remaining rotations (if any)
+				for (int i=(nrOfSuccessors-3); i>=0; i--) {
+					rotates[i] = (permNumber/nrOfSuccessors) % i+2;
+				}
+				
+				// Execute rotations
+				for (int i=1; i<=rotates.length; i++) {
+					Collections.rotate(postStates.subList(i-1,rotates.length+1), -1*rotates[rotates.length-i]);
+				}
+				// return post states in permuted order
+				return postStates;
+			} else {
+				return postStates;
+			}
+		}
         
         @Override
         protected void terminate() throws Result {
@@ -177,11 +184,9 @@ public class NNDFS extends MCNDFS {
 
     }
 
-
     public NNDFS(File file) {
     	super(file);
-    	this.stateVisitedBlue = new IntegerHashMap<State>(new Integer(0));
-    	this.stateVisitedRed = new IntegerHashMap<State>(new Integer(0));
+        this.permutationNr = new IntegerHashMap<State>(new Integer(1));
     }
 
     @Override

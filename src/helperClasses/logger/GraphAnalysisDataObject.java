@@ -38,6 +38,11 @@ public class GraphAnalysisDataObject {
     public AtomicLong dfsRedDoneCounter;
     public AtomicLong waitCounter;
 
+    public double aveNrOfBlueNodes;
+    public double aveNrOfRedNodes;
+    public double blueNodeStdDev;
+    public double redNodeStdDev;
+
     
 	public GraphAnalysisDataObject() {}
 
@@ -77,7 +82,11 @@ public class GraphAnalysisDataObject {
 		result += nrOfUnvisitedBlues + delimiter;
 		result += nrOfUnvisitedReds + delimiter;
 		result += (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + delimiter;
-		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds));
+		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + delimiter; 
+		result += aveNrOfBlueNodes + delimiter; 
+		result += aveNrOfRedNodes + delimiter;
+		result += blueNodeStdDev + delimiter;
+		result += redNodeStdDev;
 		return result;
 	}
 
@@ -90,6 +99,10 @@ public class GraphAnalysisDataObject {
 		result += ("Total number of unvisited red states: " + nrOfUnvisitedReds + "\n");
 		result += ("Blue overlap coefficient: " + (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + "\n");
 		result += ("Red overlap coefficient: " + (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + "\n");
+		result += ("Blue visit average: " + aveNrOfBlueNodes + "\n");
+		result += ("Red visit average: " + aveNrOfRedNodes + "\n");
+		result += ("Blue visit std dev: " + blueNodeStdDev + "\n");
+		result += ("Red visit std dev: " + redNodeStdDev + "\n");
 		return result;
 	}
 

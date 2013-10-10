@@ -56,31 +56,17 @@ public class NNDFS extends MCNDFS {
             }
 
             if (s.isAccepting()) {
-//                countLock.lock();
-//                try {
-//	                int count = stateCount.get(s).intValue();
-//	                stateCount.put(s, count - 1);
-//
-//	                while (stateCount.get(s).intValue() > 0) {
-//	                	countZero.await();
-//	                }
-//	                countZero.signalAll();
-//                } finally {
-//                	countLock.unlock();
-//                }
                 countLock.lock();
                 try {
 	                int count = stateCount.get(s).intValue();
 	                stateCount.put(s, count - 1);
+
+	                while (stateCount.get(s).intValue() > 0) {
+	                	countZero.await();
+	                }
+	                countZero.signalAll();
                 } finally {
                 	countLock.unlock();
-                }
-
-                synchronized(stateCount) {
-	                while (stateCount.get(s).intValue() > 0) {
-	                	stateCount.wait();
-	                }
-	                stateCount.notifyAll();
                 }
             }
 

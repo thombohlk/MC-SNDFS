@@ -1,4 +1,4 @@
-package mcndfs.opt4;
+package mcndfs.localRed;
 
 import graph.State;
 import helperClasses.logger.AlgorithmLogger;
@@ -6,7 +6,7 @@ import helperClasses.logger.AlgorithmLogger;
 import java.io.File;
 
 import ndfs.Result;
-import mcndfs.opt4.NNDFS.Bird;
+import mcndfs.localRed.NNDFS.Bird;
 
 public class NNDFS_log extends NNDFS {
 

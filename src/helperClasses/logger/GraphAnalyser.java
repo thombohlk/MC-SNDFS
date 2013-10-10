@@ -3,6 +3,7 @@ package helperClasses.logger;
 import graph.Graph;
 import graph.State;
 import helperClasses.Global;
+import helperClasses.Statistics;
 import helperClasses.StringArray;
 
 import java.util.HashSet;
@@ -15,7 +16,7 @@ import ndfs.AlgorithmResult;
 public class GraphAnalyser {
 	
 	public static final String[] ANALYSIS_CSV_HEADERS = new String[] {
-			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient" };
+			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", "ave blue visits", "ave red states", "std blue visits", "std red visits" };
 	
 	private GraphAnalysisDataObject data;
 	
@@ -35,7 +36,7 @@ public class GraphAnalyser {
 	}
 	
 	
-	public void count() {
+	public void analyseOverlap() {
 		State s = graph.getInitialState();
 		processState(s);
 	}
@@ -104,6 +105,42 @@ public class GraphAnalyser {
 	}
 
 
+	public void analyseAverage() {
+		analyseAverageBlue();
+		analyseAverageRed();
+	}
+
+
+	private void analyseAverageRed() {
+		double[] results = new double[stateRedVisits.keySet().size()];
+		int j = 0;
+
+		for (Integer i : stateRedVisits.keySet()) {
+			results[j] = stateRedVisits.get(i).size();
+			j++;
+		}
+		
+		Statistics stats = new Statistics(results);
+		data.aveNrOfRedNodes = stats.getMean();
+		data.redNodeStdDev = stats.getStdDev();
+	}
+
+
+	private void analyseAverageBlue() {
+		double[] results = new double[stateBlueVisits.keySet().size()];
+		int j = 0;
+		
+		for (Integer i : stateBlueVisits.keySet()) {
+			results[j] = stateBlueVisits.get(i).size();
+			j++;
+		}
+		
+		Statistics stats = new Statistics(results);
+		data.aveNrOfBlueNodes = stats.getMean();
+		data.blueNodeStdDev = stats.getStdDev();
+	}
+
+
 	public static GraphAnalysisDataObject constructAverageDataObject(AlgorithmResult[] results) {
 		GraphAnalysisDataObject data = new GraphAnalysisDataObject();
 		GraphAnalysisDataObject result = new GraphAnalysisDataObject();
@@ -113,6 +150,10 @@ public class GraphAnalyser {
 		int totalNrOfUnvisitedRedStates = 0;
 		int totalNrOfBlueVisists = 0;
 		int totalNrOfRedVisists = 0;
+		double totalAverageBlueVisits = 0;
+		double totalAverageRedVisits= 0;
+		double totalBlueStdVar = 0;
+		double totalRedStdVar = 0;
 		
 		for (int i = 0; i < results.length; i++) {
 			data = results[i].getAnalysisData();
@@ -120,6 +161,10 @@ public class GraphAnalyser {
 			totalNrOfUnvisitedRedStates += data.nrOfUnvisitedReds;
 			totalNrOfBlueVisists += data.nrOfBlueVisists;
 			totalNrOfRedVisists += data.nrOfRedVisists;
+			totalAverageBlueVisits += data.aveNrOfBlueNodes;
+			totalAverageRedVisits += data.aveNrOfRedNodes;
+			totalBlueStdVar += data.blueNodeStdDev;
+			totalRedStdVar += data.redNodeStdDev;
 		}
 		
 		result.nrOfStates = (int) results[0].getAnalysisData().nrOfStates;
@@ -127,6 +172,10 @@ public class GraphAnalyser {
 		result.nrOfUnvisitedReds = totalNrOfUnvisitedRedStates / nrOfResults;
 		result.nrOfBlueVisists = totalNrOfBlueVisists / nrOfResults;
 		result.nrOfRedVisists = totalNrOfRedVisists / nrOfResults;
+		result.aveNrOfBlueNodes = totalAverageBlueVisits / nrOfResults;
+		result.aveNrOfRedNodes = totalAverageRedVisits / nrOfResults;
+		result.blueNodeStdDev = totalBlueStdVar / nrOfResults;
+		result.redNodeStdDev = totalRedStdVar / nrOfResults;
 		
 		return result;
 	}

@@ -45,8 +45,8 @@ public class AlgorithmLogger {
     
     
 	public void start() {
-    	data.start = System.currentTimeMillis();
 		timer = new Timer();
+    	data.start = System.currentTimeMillis();
 		
 		if (Global.MODE.equals(Analyser.MODE_HEARTBEAT)) {
 			timer.schedule(new TimerTask() {
@@ -74,28 +74,8 @@ public class AlgorithmLogger {
 	}
 
     public void parseData() {
-		graphAnalyser.count();
-//    	printAverageNrOfNodes("blue", stateBlueVisits);
-//    	printAverageNrOfNodes("red", stateRedVisits);
-//    	printHeartBeats();
-	}
-
-	private void printAverageNrOfNodes(String color,
-			ConcurrentHashMap<Integer, HashSet<State>> visitedStates) {
-		
-		double total = 0;
-		double average = 0;
-		int nrOfThreads = 0;
-		
-		for (Integer i : visitedStates.keySet()) {
-			total += visitedStates.get(i).size();
-			System.out.println(i + ": " + visitedStates.get(i).size());
-			nrOfThreads++;
-		}
-		average = total / nrOfThreads;
-
-		System.out.println(color + ": " + average);
-		
+		graphAnalyser.analyseOverlap();
+    	graphAnalyser.analyseAverage();
 	}
 
 	synchronized public void logDfsBlueStart(int id, State s) {

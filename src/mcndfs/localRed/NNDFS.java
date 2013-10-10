@@ -1,41 +1,37 @@
-package mcndfs.optPerm2;
+package mcndfs.localRed;
+
+import graph.State;
+import helperClasses.BooleanHashMap;
+import helperClasses.Color;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import graph.GraphFactory;
-import graph.State;
-import graph.Graph;
-import helperClasses.BooleanHashMap;
-import helperClasses.Colors;
-import helperClasses.Color;
-import helperClasses.IntegerHashMap;
 import mcndfs.GeneralBird;
 import mcndfs.MCNDFS;
-import ndfs.NDFS;
-import ndfs.Result;
 import ndfs.CycleFound;
-import ndfs.NoCycleFound;
+import ndfs.Result;
 
 public class NNDFS extends MCNDFS {
 
-    volatile protected Map<State, Integer> permutationNr;
+	int nrOfThreads;
 
     class Bird extends GeneralBird {
-
+    	
+    	private int threads;
+    	private int depth;
+    	private int counter;
+    	private Map<State, Boolean> localStateRed;
+    	
         Bird(int id) {
         	super(id, file);
+        	
+        	this.threads = nrOfThreads;
+        	this.depth = 0;
+        	this.counter = 0;
+        	this.localStateRed = new BooleanHashMap<State>(new Boolean(false));
         }
 
         @Override
@@ -47,7 +43,8 @@ public class NNDFS extends MCNDFS {
 
             localStatePink.put(s, true);
 
-            post = getPermutation(s);
+            post = graph.post(s);
+            Collections.shuffle(post, rand);
 
             for (State t : post) {
                 if (localColors.hasColor(t, Color.CYAN)) {
@@ -55,9 +52,9 @@ public class NNDFS extends MCNDFS {
                 }
 
                 synchronized (stateRed) {
-                    tRed = stateRed.get(t);
-                }
-                if (! localStatePink.get(t).booleanValue() && ! tRed) {
+                	tRed = stateRed.get(t);
+	            }
+            	if (! localStatePink.get(t).booleanValue() && ! tRed) {
                     dfsRed(t);
                 }
             }
@@ -79,39 +76,66 @@ public class NNDFS extends MCNDFS {
             synchronized (stateRed) {
                 stateRed.put(s, true);
             }
+            localStateRed.put(s, true);
             localStatePink.put(s, false);
+            
         }
 
         @Override
         protected void dfsBlue(State s) throws Result, InterruptedException {
         	super.dfsBlue(s);
-        	
+
             boolean tRed;
             boolean allRed = true;
             List<State> post;
+        	
+        	depth++;
 
             localColors.color(s, Color.CYAN);
 
-            post = getPermutation(s);
+            post = graph.post(s);
+            Collections.shuffle(post, rand);
 
             for (State t : post) {
             	// early cycle detection
             	if ( localColors.hasColor(t, Color.CYAN) && s.isAccepting() && t.isAccepting() ) {
-            		throw new CycleFound();
+            		throw new CycleFound(id);
             	}
             	
-                synchronized (stateRed) {
-                    tRed = stateRed.get(t);
-                }
+            	if (depth <= threads) {
+            		synchronized (stateRed) {
+	                    tRed = stateRed.get(t);
+	                }
+            	} else if (counter < (threads + (depth/threads))/3) {
+            		tRed = localStateRed.get(t);
+            		counter++;
+            	} else {
+            		synchronized (stateRed) {
+	                    tRed = stateRed.get(t);
+	                }
+            		counter = 0;
+            	}
+            	
                 if (localColors.hasColor(t, Color.WHITE) && ! tRed) {
                     dfsBlue(t);
                 }
                 
                 // allred
-                synchronized (stateRed) {
-                    if (! stateRed.get(t)) {
-                    	allRed = false;
-                    }
+                if (depth <= threads/2) {
+	                synchronized (stateRed) {
+	                    tRed = stateRed.get(t);
+	                }
+                } else if (counter < (threads + (depth/threads))/3) {
+                	tRed = localStateRed.get(t);
+                	counter++;
+            	} else {
+            		synchronized (stateRed) {
+	                    tRed = stateRed.get(t);
+	                }
+            		counter = 0;
+            	}
+                if (! tRed) {
+                	allRed = false;
                 }
             }
 
@@ -119,6 +143,7 @@ public class NNDFS extends MCNDFS {
                 synchronized (stateRed) {
                     stateRed.put(s, true);
                 }
+                localStateRed.put(s, true);
             } else if (s.isAccepting()) {
                 synchronized (stateCount) {
                     int count = stateCount.get(s);
@@ -129,50 +154,9 @@ public class NNDFS extends MCNDFS {
             }
 
             localColors.color(s, Color.BLUE);
+            
+            depth--;
         }
-        
-        private List<State> getPermutation(State s) {
-			// Get post states
-			List<State> postStates = graph.post(s);
-			
-			// Determine amount of post states to permute
-			int nrOfSuccessors = postStates.size();
-			
-			// Permute for amount of post states > 1
-			if (nrOfSuccessors > 1) {
-				// Create array to store rotations for the different sub-parts
-				// Amount of rotations always 1 smaller than number of elements
-				// (rotating 1 element is sort of pointless)
-				int[] rotates = new int[(nrOfSuccessors-1)];
-				
-				// initialize local permutation id variable
-				int permNumber = id;
-				
-				// Acquire permutation id and increase by one (synchronized)
-//				synchronized (permutationNr) {
-//					permNumber = permutationNr.get(s);
-//					permutationNr.put(s, permNumber + 1);
-//				}
-				
-				// Calculate initial rotation (ergo on all elements)
-				// (to determine which state to visit first)
-				rotates[(rotates.length-1)] = permNumber % nrOfSuccessors;
-				
-				// Determine remaining rotations (if any)
-				for (int i=(nrOfSuccessors-3); i>=0; i--) {
-					rotates[i] = (permNumber/nrOfSuccessors) % i+2;
-				}
-				
-				// Execute rotations
-				for (int i=1; i<=rotates.length; i++) {
-					Collections.rotate(postStates.subList(i-1,rotates.length+1), -1*rotates[rotates.length-i]);
-				}
-				// return post states in permuted order
-				return postStates;
-			} else {
-				return postStates;
-			}
-		}
         
         @Override
         protected void terminate() throws Result {
@@ -184,16 +168,17 @@ public class NNDFS extends MCNDFS {
 
     }
 
+
     public NNDFS(File file) {
     	super(file);
-    	this.permutationNr = new IntegerHashMap<State>(new Integer(1));
     }
 
     @Override
     public void init(int nrOfThreads) {
+    	this.nrOfThreads = nrOfThreads;
     	for (int i = 1; i <= nrOfThreads; i++) {
     		super.swarm.add(new Bird(i));
     	}
     }
-
+    
 }

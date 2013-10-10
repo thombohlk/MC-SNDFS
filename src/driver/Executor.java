@@ -24,14 +24,12 @@ public class Executor {
 	final public static String MODE_LOCK = "lock";
 	final public static String MODE_NOSYNC = "nosync";
 	final public static String MODE_OPTPERM = "optPerm";
-	final public static String MODE_OPTPERM2 = "optPerm2";
-	final public static String MODE_OPTPERM3 = "optPerm3";
-	final public static String MODE_OPT4 = "opt4";
+	final public static String MODE_LOCALRED = "localRed";
 
 	public static String[] availableVersions = new String[] { MODE_SEQ, MODE_NAIVE,
-		MODE_EXTENDED, MODE_LOCK, MODE_NOSYNC, MODE_OPTPERM, MODE_OPTPERM2, MODE_OPTPERM3, MODE_OPT4 };
+		MODE_EXTENDED, MODE_LOCK, MODE_NOSYNC, MODE_OPTPERM, MODE_LOCALRED };
 	public static String[] nrOfThreadsOptions = new String[] { "1", "2", "4",
-		"8", "16", "32", "48" };
+		"8", "12", "16", "20", "26", "32", "40", "48" };
 
 	public Executor() {
 
@@ -49,12 +47,13 @@ public class Executor {
 	public static void runNDFS(String version, File file, String loggingMode)
 			throws FileNotFoundException, AlgorithmResult {
 		boolean useLogging = (loggingMode.equals("log") ? true : false);
+		long start, end;
 
 		Map<State, Color> colorStore = new HashMap<State, Color>();
 		Graph graph = GraphFactory.createGraph(file);
 		NDFS ndfs = NDFSFactory.createNNDFS(graph, colorStore, useLogging);
-		long start = System.currentTimeMillis();
-		long end;
+		
+		start = System.currentTimeMillis();
 		try {
 			ndfs.ndfs();
 			throw new Error("No result returned by " + version);
@@ -70,11 +69,12 @@ public class Executor {
 			String loggingMode) throws FileNotFoundException,
 			InstantiationException, AlgorithmResult {
 		boolean useLogging = (loggingMode.equals("log") ? true : false);
+		long start, end;
 
 		MCNDFS mcndfs = NDFSFactory.createMCNDFS(version, file, useLogging);
 		mcndfs.init(nrOfThreads);
-		long start = System.currentTimeMillis();
-		long end;
+
+		start = System.currentTimeMillis();
 		try {
 			mcndfs.ndfs();
 			throw new Error("No result returned by " + version);

@@ -3,12 +3,9 @@ package driver;
 import helperClasses.Global;
 import helperClasses.StringArray;
 import helperClasses.logger.GraphAnalyser;
-import helperClasses.logger.AlgorithmLogger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import ndfs.AlgorithmResult;
 import ndfs.Result;
@@ -25,7 +22,7 @@ public class Analyser {
 	final public static String[] USER_MODES = new String[] { MODE_USER, MODE_USERP };
 	final public static String[] PERFORMANCE_MODES = new String[] { MODE_USERP, MODE_CSVP };
 	
-	public static final int ANALYSIS_ITERATIONS = 5;
+	public static int ANALYSIS_ITERATIONS = 5;
 
 	protected String fileArg;
 	protected String versionArg;
@@ -47,6 +44,9 @@ public class Analyser {
 		processVersions();
 		processNrOfThreads();
 		processFiles();
+		
+		if (Global.MODE.matches(StringArray.implodeArray(PERFORMANCE_MODES, "\\|")))
+			ANALYSIS_ITERATIONS = 10;
 
 		executeCombinations();
 	}
@@ -169,7 +169,7 @@ public class Analyser {
 
 	private AlgorithmResult constructAverageResult(AlgorithmResult[] results, String version) {
 		AlgorithmResult averageResult;
-		Result result = chechAndConstructResultMessage(results);
+		Result result = checkAndConstructResultMessage(results);
 		long averageDuration = calculateAverageDuration(results);
 		
 		averageResult = new AlgorithmResult(result, averageDuration, version);
@@ -180,7 +180,7 @@ public class Analyser {
 		return averageResult;
 	}
 
-	private Result chechAndConstructResultMessage(AlgorithmResult[] results) {
+	private Result checkAndConstructResultMessage(AlgorithmResult[] results) {
 		for (int i = 0; i < results.length; i++) {
 			if (!results[i].getResult().isEqualTo(results[0].getResult())) {
 				return new Result("not all outputs are the same!");
@@ -197,11 +197,12 @@ public class Analyser {
 	 */
 	private long calculateAverageDuration(AlgorithmResult[] results) {
 		long total = 0;
+		long average = 0;
 		
 		for (int i = 0; i < results.length; i++) {
 			total = total + results[i].getDuration();
 		}
-		long average = total / results.length;
+		average = total / results.length;
 
 		return average;
 	}
