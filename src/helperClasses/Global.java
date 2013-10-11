@@ -1,7 +1,12 @@
 package helperClasses;
 
 
-
+/**
+ * Class for global variables used throughout the application.
+ * 
+ * @author thomas
+ *
+ */
 public class Global {
 	
 	public static String MODE = "";

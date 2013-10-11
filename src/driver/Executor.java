@@ -16,8 +16,15 @@ import ndfs.NDFS;
 import ndfs.NDFSFactory;
 import ndfs.Result;
 
+/**
+ * Class to execute the algorithms.
+ * 
+ * @author thomas
+ *
+ */
 public class Executor {
 
+	
 	final public static String MODE_SEQ = "seq";
 	final public static String MODE_NAIVE = "naive";
 	final public static String MODE_EXTENDED = "extended";
@@ -31,10 +38,21 @@ public class Executor {
 	public static String[] nrOfThreadsOptions = new String[] { "1", "2", "4",
 		"8", "12", "16", "20", "26", "32", "40", "48" };
 
-	public Executor() {
-
-	}
 	
+	public Executor() {	}
+	
+	/**
+	 * Runs either the sequential or one of the multithreaded algorithms,
+	 * depending on the version. Throws an AlgorithmResult with data about the run.
+	 * 
+	 * @param version
+	 * @param file
+	 * @param nrOfThreads
+	 * @param loggingMode
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 * @throws AlgorithmResult
+	 */
 	public static void run(String version, File file, int nrOfThreads,
 			String loggingMode) throws FileNotFoundException, InstantiationException, AlgorithmResult {
 		if (version.equals(MODE_SEQ)) {
@@ -44,6 +62,16 @@ public class Executor {
 		}
 	}
 
+	/**
+	 * Runs the NDFS for the sequential algorithm. Throws an AlgorithmResult with 
+	 * data about the run.
+	 * 
+	 * @param version
+	 * @param file
+	 * @param loggingMode
+	 * @throws FileNotFoundException
+	 * @throws AlgorithmResult
+	 */
 	public static void runNDFS(String version, File file, String loggingMode)
 			throws FileNotFoundException, AlgorithmResult {
 		boolean useLogging = (loggingMode.equals("log") ? true : false);
@@ -65,6 +93,18 @@ public class Executor {
 		}
 	}
 
+	/**
+	 * Runs the MCNDFS for the multithreaded versions of the algorithms. Throws an
+	 * AlgorithmResult with data about the run.
+	 * 
+	 * @param version
+	 * @param file
+	 * @param nrOfThreads
+	 * @param loggingMode
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 * @throws AlgorithmResult
+	 */
 	public static void runMCNDFS(String version, File file, int nrOfThreads,
 			String loggingMode) throws FileNotFoundException,
 			InstantiationException, AlgorithmResult {

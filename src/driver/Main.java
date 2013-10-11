@@ -18,6 +18,9 @@ public class Main {
 		}
 	};
 
+	/**
+	 * Print instruction for usage.
+	 */
 	private static void printUsage() {
 		System.out.println("Usage: bin/ndfs <file> <version> <nrWorkers>");
 		System.out.println("  where");
@@ -25,6 +28,16 @@ public class Main {
 		System.out.println("    <version> is one of {seq}");
 	}
 
+	/**
+	 * Dispatches a normal run.
+	 * 
+	 * @param file
+	 * @param version
+	 * @param nrOfThreads
+	 * @throws ArgumentException
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	private static void dispatch(File file, String version, int nrOfThreads)
 			throws ArgumentException, FileNotFoundException,
 			InstantiationException {
@@ -51,6 +64,16 @@ public class Main {
 
 	}
 
+	/**
+	 * Dispatches an analysis run.
+	 * 
+	 * @param fileArg
+	 * @param versionArg
+	 * @param nrOfThreadsArg
+	 * @throws ArgumentException
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	private static void dispatchAnalysis(String fileArg, String versionArg,
 			String nrOfThreadsArg) throws ArgumentException,
 			FileNotFoundException, InstantiationException {

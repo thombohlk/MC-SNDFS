@@ -1,5 +1,8 @@
 package helperClasses;
 
+/**
+ * Helper class for converting string arrays.
+ */
 public class StringArray {
 	
 	public static String implodeArray(String[] inputArray, String glueString) {

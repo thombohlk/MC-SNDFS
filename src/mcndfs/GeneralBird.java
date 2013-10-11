@@ -17,6 +17,13 @@ import java.util.concurrent.Callable;
 import ndfs.NoCycleFound;
 import ndfs.Result;
 
+/**
+ * Abstract version of a callable object Bird that is able to look for
+ * accepting cycles in a graph.
+ * 
+ * @author thomas
+ *
+ */
 public abstract class GeneralBird implements Callable<Integer> {
 
 	protected int id;
@@ -55,16 +62,34 @@ public abstract class GeneralBird implements Callable<Integer> {
         return this.id;
     }
     
+    /**
+     * Method to perform dfsBlue on state s.
+     * 
+     * @param s
+     * @throws Result
+     * @throws InterruptedException
+     */
     protected void dfsBlue(State s) throws Result, InterruptedException {
     	if (Thread.currentThread().isInterrupted())
             terminate();
     }
 
+    /**
+     * Method to perform dfsRed on state s.
+     * 
+     * @param s
+     * @throws Result
+     * @throws InterruptedException
+     */
 	protected void dfsRed(State s) throws Result, InterruptedException {
     	if (Thread.currentThread().isInterrupted())
             terminate();
     }
     
+	/**
+	 * Method to savely terminate the callable.
+	 * @throws Result
+	 */
     protected void terminate() throws Result {
     	throw new NoCycleFound(id);
 	}

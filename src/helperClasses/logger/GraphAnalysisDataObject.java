@@ -9,6 +9,11 @@ import graph.State;
 import helperClasses.ConcurrentLongHashMap;
 import helperClasses.Global;
 
+/**
+ * Class for storing and printing data about a graph.
+ * @author thomas
+ *
+ */
 public class GraphAnalysisDataObject {
 
 	public long start, end;

@@ -2,6 +2,9 @@ package helperClasses;
 
 import java.util.Arrays;
 
+/**
+ * Class for simple statistics on double arrays.
+ */
 public class Statistics {
 	double[] data;
 	double size;

@@ -10,8 +10,15 @@ import java.io.FileNotFoundException;
 import ndfs.AlgorithmResult;
 import ndfs.Result;
 
+/**
+ * Class to that can run, parse and print an analysis of one or multiple input combinations.
+ * 
+ * @author thomas
+ *
+ */
 public class Analyser {
 
+	
 	final public static String MODE_CSV = "csv";
 	final public static String MODE_CSVP = "csv_performance";
 	final public static String MODE_USER = "user";
@@ -32,6 +39,7 @@ public class Analyser {
 	protected File[] filesToAnalyse;
 	protected String[] threadNrsToAnalyse;
 
+	
 	public Analyser(String fileArg, String version, String nrOfThreads) {
 		this.fileArg = fileArg;
 		this.versionArg = version;
@@ -39,6 +47,9 @@ public class Analyser {
 
 	}
 
+	/**
+	 * Parses the arguments given and starts the analysis process.
+	 */
 	protected void executeAnalysis()
 			throws FileNotFoundException, InstantiationException {
 		processVersions();
@@ -51,6 +62,9 @@ public class Analyser {
 		executeCombinations();
 	}
 
+	/**
+	 * Process the files argument.
+	 */
 	private void processFiles() {
 		if (this.fileArg.equals("all")) {
 			File folder = new File("input");
@@ -65,6 +79,9 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Process the version argument.
+	 */
 	protected void processVersions() {
 		if (this.versionArg.equals("all")) {
 			this.versionsToAnalyse = Executor.availableVersions;
@@ -73,6 +90,9 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Process the nrOfThreads argument.
+	 */
 	protected void processNrOfThreads() {
 		if (this.nrOfThreadsArg.equals("all")) {
 			this.threadNrsToAnalyse = Executor.nrOfThreadsOptions;
@@ -81,6 +101,13 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Goes through all the possible combinations specified by the arguments and executes
+	 * a run for each of them.
+	 * 
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	protected void executeCombinations()
 			throws FileNotFoundException, InstantiationException {
 		// print headers
@@ -109,6 +136,15 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Executes either a heartbeat run or a analysis run, depending on the mode.
+	 * 
+	 * @param version
+	 * @param file
+	 * @param nrOfThreads
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	private void executeCombination(String version, File file, int nrOfThreads)
 			throws FileNotFoundException, InstantiationException {
 		if (Global.MODE.equals(MODE_HEARTBEAT)) {
@@ -121,6 +157,16 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Executes an analysis run. This means either 5 or 10 runs are made,
+	 * depending on the mode, and an average result is created and presented.
+	 * 
+	 * @param version
+	 * @param file
+	 * @param nrOfThreads
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	protected void executeAnalysisRun(String version, File file, int nrOfThreads)
 			throws FileNotFoundException, InstantiationException {
 		AlgorithmResult[] results = new AlgorithmResult[ANALYSIS_ITERATIONS];
@@ -139,6 +185,17 @@ public class Analyser {
 		printAlgorithmResult(result);
 	}
 
+	/**
+	 * Executes on run for the given input.
+	 * 
+	 * @param iteration
+	 * @param version
+	 * @param file
+	 * @param nrOfThreads
+	 * @return AlgorithmResult
+	 * @throws FileNotFoundException
+	 * @throws InstantiationException
+	 */
 	private AlgorithmResult executeRun(int iteration, String version,
 			File file, int nrOfThreads) throws FileNotFoundException,
 			InstantiationException {
@@ -167,6 +224,13 @@ public class Analyser {
 		return result;
 	}
 
+	/**
+	 * Constructs an average result, based on the values of the result in results.
+	 * 
+	 * @param results
+	 * @param version
+	 * @return
+	 */
 	private AlgorithmResult constructAverageResult(AlgorithmResult[] results, String version) {
 		AlgorithmResult averageResult;
 		Result result = checkAndConstructResultMessage(results);
@@ -180,6 +244,12 @@ public class Analyser {
 		return averageResult;
 	}
 
+	/**
+	 * Checks if all results are equal and generates an result message accordingly.
+	 * 
+	 * @param results
+	 * @return Result
+	 */
 	private Result checkAndConstructResultMessage(AlgorithmResult[] results) {
 		for (int i = 0; i < results.length; i++) {
 			if (!results[i].getResult().isEqualTo(results[0].getResult())) {
@@ -193,7 +263,7 @@ public class Analyser {
 	 * Calculates average duration for multiple results.
 	 * 
 	 * @param results
-	 * @return
+	 * @return long
 	 */
 	private long calculateAverageDuration(AlgorithmResult[] results) {
 		long total = 0;
@@ -207,6 +277,11 @@ public class Analyser {
 		return average;
 	}
 
+	/**
+	 * Calls the proper print method according to the mode.
+	 * 
+	 * @param result
+	 */
 	private void printAlgorithmResult(AlgorithmResult result) {
 		switch (Global.MODE) {
 		case MODE_USER:
@@ -225,6 +300,11 @@ public class Analyser {
 		}
 	}
 
+	/**
+	 * Print the results as CSV output.
+	 * 
+	 * @param result
+	 */
 	private void printAlgorithmResultCSV(AlgorithmResult result) {
 		
 		String delimiter = Global.CSV_DELIMITER;
@@ -238,6 +318,11 @@ public class Analyser {
 				"\n");
 	}
 
+	/**
+	 * Print the results for a user.
+	 * 
+	 * @param result
+	 */
 	private void printAlgorithmResultUser(AlgorithmResult result) {
 		System.out.println(result.getVersion() + " took "
 				+ result.getDuration() + "ms with: " + result.getMessage()
@@ -246,9 +331,13 @@ public class Analyser {
 			System.out.print(result.getAnalysisData().getResultsUser() + "\n");
 	}
 
+	/**
+	 * Output the results of a heartbeat run.
+	 * 
+	 * @param result
+	 */
 	private void printAlgorithmResultHeartBeat(AlgorithmResult result) {
 		result.getAnalysisData().printHeartBeats();
 	}
-
 
 }

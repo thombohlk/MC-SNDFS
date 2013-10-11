@@ -18,7 +18,14 @@ import ndfs.CycleFound;
 import ndfs.NoCycleFound;
 import ndfs.Result;
 
+/**
+ * Abstract class for implentation of the a multi-core NDFS algorithm.
+ * 
+ * @author thomas
+ *
+ */
 public abstract class MCNDFS implements MCNDFSInterface {
+
 
 	protected File file;
 	protected BooleanHashMap<State> stateRed;
@@ -27,6 +34,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 	protected AlgorithmLogger logger;
 	protected ExecutorService executorService;
 
+
 	public MCNDFS(File file) {
         this.file = file;
         this.stateRed = new BooleanHashMap<State>(new Boolean(false));
@@ -34,6 +42,12 @@ public abstract class MCNDFS implements MCNDFSInterface {
     	this.swarm = new ArrayList<GeneralBird>();
     }
 
+	/**
+	 * Initiates the executor completion service which starts each of the Birds in
+	 * this.swarm. Waits for the first result and throws the accompanying Result.
+	 * 
+	 * @throws Result
+	 */
     protected void nndfs() throws Result {
         boolean foundCycle = false;
         int foundBy = 0;
@@ -62,6 +76,7 @@ public abstract class MCNDFS implements MCNDFSInterface {
 		}
         executorService.shutdownNow();
 
+        // Returns the proper result.
         if (foundCycle) {
             result = new CycleFound(foundBy);
         } else {
@@ -73,11 +88,16 @@ public abstract class MCNDFS implements MCNDFSInterface {
         
     }
 
-
+    /**
+     * Starts the algorithm.
+     */
 	public void ndfs() throws Result {
         nndfs();
     }
 
+	/**
+	 * Makes sure the algorithms is properly shutdown.
+	 */
 	public void tearDown() {
 		try {
 			executorService.awaitTermination(30, TimeUnit.SECONDS);

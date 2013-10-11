@@ -19,7 +19,6 @@ public class GraphAnalyser {
 			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", "ave blue visits", "ave red states", "std blue visits", "std red visits" };
 	
 	private GraphAnalysisDataObject data;
-	
 	private HashSet<State> visitedStates;
 	private Graph graph;
 
@@ -35,13 +34,18 @@ public class GraphAnalyser {
 		this.stateRedVisits = data.stateRedVisits;
 	}
 	
-	
+	/**
+	 * Start the walk through the tree to analyse the tree.
+	 */
 	public void analyseOverlap() {
 		State s = graph.getInitialState();
 		processState(s);
 	}
 	
-	
+	/**
+	 * Recursive method for walking through the graph.
+	 * @param s
+	 */
 	private void processState(State s) {
 		if (visitedStates.contains(s)) {
 			return;
@@ -57,7 +61,10 @@ public class GraphAnalyser {
 		}
 	}
 
-	
+	/**
+	 * Counts the number of dfs blue and dfs red calls for state s.
+	 * @param s
+	 */
 	private void countState(State s) {
 		boolean visitedBlue = false;
 		boolean visitedRed = false;
@@ -83,12 +90,17 @@ public class GraphAnalyser {
 		}
 	}
 
-	
+	/**
+	 * Prints the results in a user friendly manner.
+	 */
 	public void printResults() {
 		System.out.println(data.getResultsUser());
 	}
 	
-	
+	/**
+	 * Returns the csv headers for analysis parameters.
+	 * @return
+	 */
 	public static String getAnalysisCSVHeaders() {
 		String result = StringArray.implodeArray(ANALYSIS_CSV_HEADERS, Global.CSV_DELIMITER);
 		return result;
@@ -104,13 +116,18 @@ public class GraphAnalyser {
 		this.data = data;
 	}
 
-
+	/**
+	 * Calculates averages and standard deviation for dfs blue and dfs red visits.
+	 */
 	public void analyseAverage() {
 		analyseAverageBlue();
 		analyseAverageRed();
 	}
 
-
+	/**
+	 * Calculates the average number of dfs red calls per thread and the
+	 * standard deviation.
+	 */
 	private void analyseAverageRed() {
 		double[] results = new double[stateRedVisits.keySet().size()];
 		int j = 0;
@@ -125,7 +142,10 @@ public class GraphAnalyser {
 		data.redNodeStdDev = stats.getStdDev();
 	}
 
-
+	/**
+	 * Calculates the average number of dfs blue calls per thread and the
+	 * standard deviation.
+	 */
 	private void analyseAverageBlue() {
 		double[] results = new double[stateBlueVisits.keySet().size()];
 		int j = 0;
@@ -140,7 +160,11 @@ public class GraphAnalyser {
 		data.blueNodeStdDev = stats.getStdDev();
 	}
 
-
+	/**
+	 * Creates an average data objects from the data of the given algorithm results.
+	 * @param results
+	 * @return
+	 */
 	public static GraphAnalysisDataObject constructAverageDataObject(AlgorithmResult[] results) {
 		GraphAnalysisDataObject data = new GraphAnalysisDataObject();
 		GraphAnalysisDataObject result = new GraphAnalysisDataObject();
