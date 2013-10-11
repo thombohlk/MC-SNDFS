@@ -42,13 +42,15 @@ public abstract class MCNDFS implements MCNDFSInterface {
         int foundBy = 0;
         Result result;
 
+        long start = System.currentTimeMillis();
         executorService = Executors.newFixedThreadPool(swarm.size());
         CompletionService<Integer> cs = new ExecutorCompletionService<Integer>(executorService);
-        
+        System.out.print("setup: " + (System.currentTimeMillis() - start));
         // setup threads for each of the callables 
         for (int i = 0; i < this.swarm.size(); i++) {
             cs.submit(swarm.get(i));
         }
+        System.out.print(", adding: " + (System.currentTimeMillis() - start) + "\n");
 
         // Wait for the first thread to return. If an exception is thrown the 
         // completion service is shut down and a CycleFound will be thrown.

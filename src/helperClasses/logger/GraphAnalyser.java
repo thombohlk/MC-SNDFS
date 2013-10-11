@@ -16,7 +16,7 @@ import ndfs.AlgorithmResult;
 public class GraphAnalyser {
 	
 	public static final String[] ANALYSIS_CSV_HEADERS = new String[] {
-//			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", 
+			"#states", "#blueVisits", "#redVisits", "#unvisitedBlueStates", "#unvisitedRedStates", "blueOverlapCoefficient", "redOverlapCoefficient", 
 		"ave blue visits", "ave red states", "std blue visits", "std red visits", "average waiting time", "waiting time std"};
 	
 	private GraphAnalysisDataObject data;

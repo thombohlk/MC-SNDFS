@@ -80,13 +80,13 @@ public class GraphAnalysisDataObject {
 	public String getResultsCSV() {
 		String delimiter = Global.CSV_DELIMITER;
 		String result = "";
-//		result += nrOfStates + delimiter;
-//		result += nrOfBlueVisists + delimiter;
-//		result += nrOfRedVisists + delimiter;
-//		result += nrOfUnvisitedBlues + delimiter;
-//		result += nrOfUnvisitedReds + delimiter;
-//		result += (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + delimiter;
-//		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + delimiter; 
+		result += nrOfStates + delimiter;
+		result += nrOfBlueVisists + delimiter;
+		result += nrOfRedVisists + delimiter;
+		result += nrOfUnvisitedBlues + delimiter;
+		result += nrOfUnvisitedReds + delimiter;
+		result += (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + delimiter;
+		result += (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + delimiter; 
 		result += aveNrOfBlueNodes + delimiter; 
 		result += aveNrOfRedNodes + delimiter;
 		result += blueNodeStdDev + delimiter;
@@ -98,13 +98,13 @@ public class GraphAnalysisDataObject {
 
 	public String getResultsUser() {
 		String result = "\n";
-//		result += ("Total amount of states: " + nrOfStates + "\n");
-//		result += ("Total number of blue visits: " + nrOfBlueVisists + "\n");
-//		result += ("Total number of red visits: " + nrOfRedVisists + "\n");
-//		result += ("Total number of unvisited blue states: " + nrOfUnvisitedBlues + "\n");
-//		result += ("Total number of unvisited red states: " + nrOfUnvisitedReds + "\n");
-//		result += ("Blue overlap coefficient: " + (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + "\n");
-//		result += ("Red overlap coefficient: " + (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + "\n");
+		result += ("Total amount of states: " + nrOfStates + "\n");
+		result += ("Total number of blue visits: " + nrOfBlueVisists + "\n");
+		result += ("Total number of red visits: " + nrOfRedVisists + "\n");
+		result += ("Total number of unvisited blue states: " + nrOfUnvisitedBlues + "\n");
+		result += ("Total number of unvisited red states: " + nrOfUnvisitedReds + "\n");
+		result += ("Blue overlap coefficient: " + (nrOfBlueVisists / (nrOfStates - nrOfUnvisitedBlues)) + "\n");
+		result += ("Red overlap coefficient: " + (nrOfRedVisists / (nrOfStates - nrOfUnvisitedReds)) + "\n");
 		result += ("Blue visit average: " + aveNrOfBlueNodes + "\n");
 		result += ("Red visit average: " + aveNrOfRedNodes + "\n");
 		result += ("Blue visit std dev: " + blueNodeStdDev + "\n");

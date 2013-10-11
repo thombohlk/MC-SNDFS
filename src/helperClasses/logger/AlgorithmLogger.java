@@ -68,7 +68,7 @@ public class AlgorithmLogger {
 	}
 
     public void parseData() {
-//		graphAnalyser.analyseOverlap();
+		graphAnalyser.analyseOverlap();
     	graphAnalyser.analyseAverage();
 	}
 
