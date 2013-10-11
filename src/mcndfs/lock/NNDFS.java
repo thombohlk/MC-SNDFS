@@ -112,10 +112,15 @@ public class NNDFS extends MCNDFS {
                 
                 // allred
                 redLock.lock();
-                if (! stateRed.get(t)) {
+                try {
+                	tRed = stateRed.get(t);
+                } finally {
+                	redLock.unlock();
+                }
+                
+                if (! tRed) {
                 	allRed = false;
                 }
-                redLock.unlock();
             }
 
             if (allRed) {
